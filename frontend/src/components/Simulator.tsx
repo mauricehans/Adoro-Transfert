@@ -4,7 +4,7 @@ import Button from './ui/Button';
 import Input from './ui/Input';
 import { useSimulatorSocket } from '../hooks/useSimulatorSocket';
 import { useSimulationStore } from '../store';
-import { buildWhatsAppUrl } from '../lib/whatsapp';
+import { buildWhatsAppUrl, getWhatsAppNumber } from '../lib/whatsapp';
 import api from '../lib/api';
 
 const corridors = [
@@ -77,11 +77,13 @@ export default function Simulator() {
       // transaction save failed, proceed anyway
     }
 
+    const whatsappNumber = await getWhatsAppNumber();
     const url = buildWhatsAppUrl({
       result,
       beneficiaryName,
       beneficiaryPhone,
       beneficiaryEmail,
+      whatsappNumber,
     });
     window.open(url, '_blank');
     setSending(false);

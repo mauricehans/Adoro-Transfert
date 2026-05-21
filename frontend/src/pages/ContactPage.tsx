@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { MessageCircle, Mail, Phone, MapPin, Send } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
-import { getWhatsAppSupportUrl } from '../lib/whatsapp';
+import { useContactSettings } from '../hooks/useContactSettings';
 
 export default function ContactPage() {
+  const { whatsappNumber, notificationEmail } = useContactSettings();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
@@ -13,8 +14,8 @@ export default function ContactPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const text = `Bonjour, je suis ${name} (${email}).\n\nSujet: ${subject}\n\n${message}`;
-    const url = getWhatsAppSupportUrl(text);
-    window.open(url, '_blank');
+    const encoded = encodeURIComponent(text);
+    window.open(`https://wa.me/${whatsappNumber}?text=${encoded}`, '_blank');
   };
 
   return (
@@ -87,7 +88,7 @@ export default function ContactPage() {
                 <h3 className="font-display text-xl text-bone mb-4">INFORMATIONS</h3>
                 <div className="space-y-4">
                   <a
-                    href={getWhatsAppSupportUrl()}
+                    href={`https://wa.me/${whatsappNumber}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-4 p-3 rounded-xl bg-dark-800/50 hover:bg-dark-700/50 transition-colors group"
@@ -97,12 +98,18 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-bone text-sm font-medium">WhatsApp</p>
-                      <p className="text-ash text-xs">+241 74 49 818</p>
+                      <p className="text-ash text-xs">
+                        {whatsappNumber.length === 10
+                          ? whatsappNumber.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1.$2.$3.$4.$5')
+                          : whatsappNumber.length === 11 && whatsappNumber.startsWith('33')
+                          ? whatsappNumber.replace(/33(\d)(\d{2})(\d{2})(\d{2})(\d{2})/, '0$1.$2.$3.$4.$5')
+                          : whatsappNumber}
+                      </p>
                     </div>
                   </a>
 
                   <a
-                    href="mailto:contact@adoro-transfert.com"
+                    href={`mailto:${notificationEmail}`}
                     className="flex items-center gap-4 p-3 rounded-xl bg-dark-800/50 hover:bg-dark-700/50 transition-colors group"
                   >
                     <div className="w-10 h-10 rounded-lg bg-emerald-primary/10 flex items-center justify-center group-hover:bg-emerald-primary/20 transition-colors">
@@ -110,12 +117,12 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-bone text-sm font-medium">Email</p>
-                      <p className="text-ash text-xs">contact@adoro-transfert.com</p>
+                      <p className="text-ash text-xs">{notificationEmail}</p>
                     </div>
                   </a>
 
                   <a
-                    href="tel:+2417449818"
+                    href={`tel:${whatsappNumber}`}
                     className="flex items-center gap-4 p-3 rounded-xl bg-dark-800/50 hover:bg-dark-700/50 transition-colors group"
                   >
                     <div className="w-10 h-10 rounded-lg bg-emerald-primary/10 flex items-center justify-center group-hover:bg-emerald-primary/20 transition-colors">
@@ -123,7 +130,13 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-bone text-sm font-medium">Telephone</p>
-                      <p className="text-ash text-xs">+241 74 49 818</p>
+                      <p className="text-ash text-xs">
+                        {whatsappNumber.length === 10
+                          ? whatsappNumber.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1.$2.$3.$4.$5')
+                          : whatsappNumber.length === 11 && whatsappNumber.startsWith('33')
+                          ? whatsappNumber.replace(/33(\d)(\d{2})(\d{2})(\d{2})(\d{2})/, '0$1.$2.$3.$4.$5')
+                          : whatsappNumber}
+                      </p>
                     </div>
                   </a>
 

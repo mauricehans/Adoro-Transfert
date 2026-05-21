@@ -59,8 +59,18 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const { data } = await api.get('/admin/settings/');
-        setSettings(data);
+        const { data } = await api.get('/settings/');
+        const map: Record<string, any> = {};
+        data.forEach((s: { key: string; value: any }) => {
+          map[s.key] = s.value;
+        });
+        setSettings((prev) => ({
+          ...prev,
+          whatsappNumber: map.whatsapp_number?.number || prev.whatsappNumber,
+          emailRecipient: map.notification_email?.email || prev.emailRecipient,
+          activeCurrencies: map.active_currencies?.currencies || prev.activeCurrencies,
+          whatsappTemplate: map.whatsapp_template?.template || prev.whatsappTemplate,
+        }));
       } catch {
         // use defaults
       }
@@ -71,7 +81,20 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await api.put('/admin/settings/', settings);
+      await Promise.all([
+        api.patch('/settings/notification_email/', {
+          value: { email: settings.emailRecipient },
+        }),
+        api.patch('/settings/whatsapp_number/', {
+          value: { number: settings.whatsappNumber },
+        }),
+        api.patch('/settings/whatsapp_template/', {
+          value: { template: settings.whatsappTemplate },
+        }),
+        api.patch('/settings/active_currencies/', {
+          value: { currencies: settings.activeCurrencies },
+        }),
+      ]);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch {

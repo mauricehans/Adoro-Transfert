@@ -12,6 +12,7 @@ import DashboardPage from './pages/admin/DashboardPage';
 import RatesPage from './pages/admin/RatesPage';
 import TransactionsPage from './pages/admin/TransactionsPage';
 import SettingsPage from './pages/admin/SettingsPage';
+import UsersPage from './pages/admin/UsersPage';
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
           <Route path="rates" element={<RatesPage />} />
           <Route path="transactions" element={<TransactionsPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="users" element={<UsersPage />} />
         </Route>
       </Routes>
     </div>

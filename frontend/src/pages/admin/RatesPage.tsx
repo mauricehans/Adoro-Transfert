@@ -38,8 +38,8 @@ export default function RatesPage() {
         api.get('/admin/rates/'),
         api.get('/admin/rates/history/?days=30'),
       ]);
-      setHistory(historyRes.data);
-      setChartData(chartRes.data);
+      setHistory(historyRes.data.results || historyRes.data);
+      setChartData(chartRes.data.results || chartRes.data);
     } catch {
       // Fallback data
       const mockHistory: RateEntry[] = pairs.flatMap((pair, pi) =>

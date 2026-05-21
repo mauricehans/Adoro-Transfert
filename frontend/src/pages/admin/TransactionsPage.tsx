@@ -60,7 +60,7 @@ export default function TransactionsPage() {
     setLoading(true);
     try {
       const { data } = await api.get('/admin/transactions/');
-      setTransactions(data);
+      setTransactions(data.results || data);
     } catch {
       // Fallback mock data
       setTransactions(

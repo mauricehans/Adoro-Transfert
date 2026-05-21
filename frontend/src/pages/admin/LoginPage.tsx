@@ -5,7 +5,7 @@ import Input from '../../components/ui/Input';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,9 +16,9 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
+      await login(identifier, password);
     } catch {
-      setError('Email ou mot de passe incorrect.');
+      setError("Nom d'utilisateur/email ou mot de passe incorrect.");
     } finally {
       setLoading(false);
     }
@@ -43,11 +43,11 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@adoro-transfert.com"
+              label="Nom d'utilisateur ou Email"
+              type="text"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder="admin ou admin@adoro-transfert.com"
               required
             />
             <Input
@@ -70,6 +70,10 @@ export default function LoginPage() {
               Se connecter
             </Button>
           </form>
+
+          <p className="text-center text-xs text-ash mt-4">
+            Connectez-vous avec votre nom d'utilisateur ou votre adresse email.
+          </p>
         </div>
       </div>
     </div>

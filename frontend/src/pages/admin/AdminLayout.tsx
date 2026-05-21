@@ -1,21 +1,24 @@
 import { Navigate, Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, TrendingUp, List, Settings, LogOut, Zap } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, List, Settings, LogOut, Zap, Users, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 const sidebarLinks = [
-  { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/admin/rates', label: 'Taux', icon: TrendingUp },
-  { path: '/admin/transactions', label: 'Transactions', icon: List },
-  { path: '/admin/settings', label: 'Parametres', icon: Settings },
+  { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, superOnly: false },
+  { path: '/admin/rates', label: 'Taux', icon: TrendingUp, superOnly: false },
+  { path: '/admin/transactions', label: 'Transactions', icon: List, superOnly: false },
+  { path: '/admin/settings', label: 'Parametres', icon: Settings, superOnly: false },
+  { path: '/admin/users', label: 'Utilisateurs', icon: Users, superOnly: true },
 ];
 
 export default function AdminLayout() {
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, isSuperAdmin, logout, user } = useAuth();
   const location = useLocation();
 
   if (!isAuthenticated) {
     return <Navigate to="/admin/login" replace />;
   }
+
+  const visibleLinks = sidebarLinks.filter((link) => !link.superOnly || isSuperAdmin);
 
   return (
     <div className="min-h-screen flex bg-dark-900">
@@ -35,7 +38,7 @@ export default function AdminLayout() {
 
         {/* Nav */}
         <nav className="flex-1 p-3 space-y-1">
-          {sidebarLinks.map((link) => {
+          {visibleLinks.map((link) => {
             const isActive =
               link.path === '/admin'
                 ? location.pathname === '/admin'
@@ -62,14 +65,19 @@ export default function AdminLayout() {
           <div className="flex items-center gap-3 mb-3">
             <div className="w-8 h-8 rounded-full bg-emerald-primary/20 flex items-center justify-center">
               <span className="text-xs font-bold text-emerald-primary">
-                {user?.firstName?.[0] || 'A'}
+                {user?.firstName?.[0] || user?.username?.[0] || 'A'}
               </span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-bone text-sm truncate">
-                {user?.firstName} {user?.lastName}
+                {user?.firstName ? `${user.firstName} ${user.lastName}` : user?.username}
               </p>
-              <p className="text-ash text-xs truncate">{user?.email}</p>
+              <div className="flex items-center gap-1.5">
+                {isSuperAdmin && <ShieldCheck size={10} className="text-amber-400" />}
+                <p className="text-ash text-xs truncate">
+                  {isSuperAdmin ? 'Super Admin' : 'Admin'}
+                </p>
+              </div>
             </div>
           </div>
           <button

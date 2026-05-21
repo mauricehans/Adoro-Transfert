@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Zap, MessageCircle, Mail, Phone } from 'lucide-react';
-import { getWhatsAppSupportUrl } from '../lib/whatsapp';
+import { useContactSettings } from '../hooks/useContactSettings';
 
 export default function Footer() {
+  const { whatsappNumber, notificationEmail } = useContactSettings();
   return (
     <footer className="bg-dark-800 border-t border-emerald-primary/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -62,7 +63,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li>
                 <a
-                  href={getWhatsAppSupportUrl()}
+                  href={`https://wa.me/${whatsappNumber}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-ash text-sm hover:text-bone transition-colors"
@@ -73,20 +74,24 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:contact@adoro-transfert.com"
+                  href={`mailto:${notificationEmail}`}
                   className="flex items-center gap-2 text-ash text-sm hover:text-bone transition-colors"
                 >
                   <Mail size={16} className="text-emerald-primary" />
-                  contact@adoro-transfert.com
+                  {notificationEmail}
                 </a>
               </li>
               <li>
                 <a
-                  href="tel:+2417449818"
+                  href={`tel:${whatsappNumber}`}
                   className="flex items-center gap-2 text-ash text-sm hover:text-bone transition-colors"
                 >
                   <Phone size={16} className="text-emerald-primary" />
-                  +241 74 49 818
+                  {whatsappNumber.length === 10
+                    ? whatsappNumber.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1.$2.$3.$4.$5')
+                    : whatsappNumber.length === 11 && whatsappNumber.startsWith('33')
+                    ? whatsappNumber.replace(/33(\d)(\d{2})(\d{2})(\d{2})(\d{2})/, '0$1.$2.$3.$4.$5')
+                    : whatsappNumber}
                 </a>
               </li>
             </ul>

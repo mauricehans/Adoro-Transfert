@@ -10,9 +10,11 @@ export interface Rate {
 
 export interface User {
   id: number;
+  username: string;
   email: string;
   firstName: string;
   lastName: string;
+  role: 'admin' | 'super_admin';
 }
 
 export interface SimulationResult {

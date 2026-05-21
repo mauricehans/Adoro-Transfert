@@ -4,6 +4,7 @@ Django settings for adoro project.
 
 from datetime import timedelta
 from pathlib import Path
+import sys
 
 from decouple import Csv, config
 
@@ -81,12 +82,21 @@ DATABASES = {
     }
 }
 
+if 'test' in sys.argv:
+    class DisableMigrations(object):
+        def __contains__(self, item):
+            return True
+        def __getitem__(self, item):
+            return None
+    MIGRATION_MODULES = DisableMigrations()
+
 # Custom user model
 AUTH_USER_MODEL = "accounts.AdminUser"
 
-# Authentication backends (axes first)
+# Authentication backends (axes first, then custom username/email backend)
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",
+    "accounts.backends.UsernameOrEmailBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
 

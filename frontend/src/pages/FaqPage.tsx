@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, MessageCircle } from 'lucide-react';
 import Button from '../components/ui/Button';
-import { getWhatsAppSupportUrl } from '../lib/whatsapp';
+import { useContactSettings } from '../hooks/useContactSettings';
 
 interface FaqItem {
   question: string;
@@ -120,6 +120,8 @@ function AccordionItem({ item }: { item: FaqItem }) {
 }
 
 export default function FaqPage() {
+  const { whatsappNumber } = useContactSettings();
+
   return (
     <div className="pt-24 pb-16">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -148,7 +150,7 @@ export default function FaqPage() {
         {/* CTA */}
         <div className="mt-12 text-center animate-fade-up">
           <p className="text-ash mb-4">Vous n'avez pas trouve votre reponse ?</p>
-          <a href={getWhatsAppSupportUrl('Bonjour, j\'ai une question concernant vos services.')} target="_blank" rel="noopener noreferrer">
+          <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Bonjour, j'ai une question concernant vos services.")}`} target="_blank" rel="noopener noreferrer">
             <Button size="lg">
               <MessageCircle size={18} className="mr-2" />
               Posez votre question sur WhatsApp

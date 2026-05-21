@@ -4,7 +4,7 @@ import Simulator from '../components/Simulator';
 import ProcessFlow from '../components/ProcessFlow';
 import CorridorCard from '../components/CorridorCard';
 import Button from '../components/ui/Button';
-import { getWhatsAppSupportUrl } from '../lib/whatsapp';
+import { useContactSettings } from '../hooks/useContactSettings';
 
 const corridorsPreview = [
   { from: 'France', to: 'Gabon', fromFlag: '\u{1F1EB}\u{1F1F7}', toFlag: '\u{1F1EC}\u{1F1E6}', currencyFrom: 'EUR', currencyTo: 'XAF', methods: ['airtel', 'bank'] },
@@ -18,6 +18,8 @@ const corridorsPreview = [
 ];
 
 export default function HomePage() {
+  const { whatsappNumber } = useContactSettings();
+
   return (
     <div className="pt-16">
       {/* Hero */}
@@ -44,7 +46,7 @@ export default function HomePage() {
                   <ArrowRight size={18} className="ml-2" />
                 </Button>
               </Link>
-              <a href={getWhatsAppSupportUrl()} target="_blank" rel="noopener noreferrer">
+              <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer">
                 <Button variant="secondary" size="lg">
                   <MessageCircle size={18} className="mr-2" />
                   Nous contacter
@@ -110,7 +112,7 @@ export default function HomePage() {
             <p className="text-ash mb-8 max-w-lg mx-auto">
               Utilisez notre simulateur ci-dessus ou contactez-nous directement sur WhatsApp pour effectuer votre transfert.
             </p>
-            <a href={getWhatsAppSupportUrl()} target="_blank" rel="noopener noreferrer">
+            <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer">
               <Button size="lg">
                 <MessageCircle size={18} className="mr-2" />
                 Contacter via WhatsApp
