@@ -5,19 +5,24 @@ import Modal from '../../components/ui/Modal';
 import api from '../../lib/api';
 
 interface Transaction {
-  id: number;
+  id: string;
   corridor: string;
-  amountSent: number;
-  currencySent: string;
-  amountReceived: number;
-  currencyReceived: string;
-  adoroFee: number;
-  airtelFee: number;
-  rate: number;
-  beneficiaryName: string;
-  beneficiaryPhone: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  createdAt: string;
+  amount_sent: number;
+  currency_sent: string;
+  amount_received: number;
+  currency_received: string;
+  fees_adoro: number;
+  fees_airtel: number;
+  total_to_send: number;
+  rate_used: number;
+  beneficiary_name: string;
+  beneficiary_phone: string;
+  beneficiary_email: string;
+  status: 'pending_contact' | 'in_progress' | 'completed' | 'cancelled';
+  admin_notes: string;
+  email_sent: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 const corridorLabels: Record<string, string> = {
@@ -32,17 +37,17 @@ const corridorLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
-  pending: 'bg-yellow-500/10 text-yellow-400',
-  confirmed: 'bg-blue-500/10 text-blue-400',
+  pending_contact: 'bg-yellow-500/10 text-yellow-400',
+  in_progress: 'bg-blue-500/10 text-blue-400',
   completed: 'bg-emerald-primary/10 text-emerald-primary',
   cancelled: 'bg-red-500/10 text-red-400',
 };
 
 const statusLabels: Record<string, string> = {
-  pending: 'En attente',
-  confirmed: 'Confirme',
-  completed: 'Termine',
-  cancelled: 'Annule',
+  pending_contact: 'En attente',
+  in_progress: 'En cours',
+  completed: 'Terminee',
+  cancelled: 'Annulee',
 };
 
 export default function TransactionsPage() {
@@ -59,37 +64,27 @@ export default function TransactionsPage() {
   const fetchTransactions = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/admin/transactions/');
+      const params: Record<string, string> = {};
+      if (filterCorridor !== 'all') params.corridor = filterCorridor;
+      if (filterStatus !== 'all') params.status = filterStatus;
+      const { data } = await api.get('/transactions/list/', { params });
       setTransactions(data.results || data);
     } catch {
-      // Fallback mock data
-      setTransactions(
-        Array.from({ length: 15 }, (_, i) => ({
-          id: i + 1,
-          corridor: ['FR_GA', 'GA_FR', 'FR_CM', 'FR_SN', 'FR_MA'][i % 5],
-          amountSent: Math.round(50 + Math.random() * 950),
-          currencySent: i % 5 === 1 ? 'XAF' : 'EUR',
-          amountReceived: Math.round((50 + Math.random() * 950) * 655),
-          currencyReceived: i % 5 === 1 ? 'EUR' : 'XAF',
-          adoroFee: Math.round(5 + Math.random() * 15),
-          airtelFee: i % 3 === 0 ? 2500 : 0,
-          rate: 655.96,
-          beneficiaryName: ['Jean Dupont', 'Marie Obame', 'Paul Nze', 'Fatou Diallo', 'Ahmed Benali'][i % 5],
-          beneficiaryPhone: '+241 74 XX XX XX',
-          status: (['pending', 'confirmed', 'completed', 'cancelled'] as const)[i % 4],
-          createdAt: new Date(Date.now() - i * 3600000 * 6).toISOString(),
-        }))
-      );
+      setTransactions([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const updateStatus = async (id: number, status: string) => {
+  useEffect(() => {
+    fetchTransactions();
+  }, [filterCorridor, filterStatus]);
+
+  const updateStatus = async (id: string, newStatus: string) => {
     try {
-      await api.patch(`/admin/transactions/${id}/`, { status });
+      await api.patch(`/transactions/${id}/`, { status: newStatus });
       setTransactions((prev) =>
-        prev.map((tx) => (tx.id === id ? { ...tx, status: status as Transaction['status'] } : tx))
+        prev.map((tx) => (tx.id === id ? { ...tx, status: newStatus as Transaction['status'] } : tx))
       );
       setSelectedTx(null);
     } catch {
@@ -97,28 +92,23 @@ export default function TransactionsPage() {
     }
   };
 
-  const exportCSV = () => {
-    const headers = 'ID,Corridor,Montant,Devise,Beneficiaire,Statut,Date\n';
-    const rows = filteredTransactions
-      .map(
-        (tx) =>
-          `${tx.id},${tx.corridor},${tx.amountSent},${tx.currencySent},${tx.beneficiaryName},${tx.status},${tx.createdAt}`
-      )
-      .join('\n');
-    const blob = new Blob([headers + rows], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `transactions_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const exportCSV = async () => {
+    try {
+      const response = await api.get('/transactions/export/?format=csv', {
+        responseType: 'blob',
+      });
+      const url = URL.createObjectURL(response.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `transactions_adoro_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // fallback: nothing
+    }
   };
 
-  const filteredTransactions = transactions.filter((tx) => {
-    if (filterCorridor !== 'all' && tx.corridor !== filterCorridor) return false;
-    if (filterStatus !== 'all' && tx.status !== filterStatus) return false;
-    return true;
-  });
+  const filteredTransactions = transactions;
 
   return (
     <div>
@@ -175,6 +165,7 @@ export default function TransactionsPage() {
                 <th className="px-4 py-3 text-left text-xs font-mono text-ash uppercase">Corridor</th>
                 <th className="px-4 py-3 text-left text-xs font-mono text-ash uppercase">Montant</th>
                 <th className="px-4 py-3 text-left text-xs font-mono text-ash uppercase">Beneficiaire</th>
+                <th className="px-4 py-3 text-left text-xs font-mono text-ash uppercase">Email</th>
                 <th className="px-4 py-3 text-left text-xs font-mono text-ash uppercase">Statut</th>
                 <th className="px-4 py-3 text-left text-xs font-mono text-ash uppercase">Actions</th>
               </tr>
@@ -182,17 +173,22 @@ export default function TransactionsPage() {
             <tbody>
               {filteredTransactions.map((tx) => (
                 <tr key={tx.id} className="border-b border-dark-700/50 hover:bg-dark-700/30 transition-colors">
-                  <td className="px-4 py-3 text-sm text-ash font-mono">#{tx.id}</td>
+                  <td className="px-4 py-3 text-sm text-ash font-mono">#{tx.id.slice(0, 8)}</td>
                   <td className="px-4 py-3 text-sm text-ash font-mono">
-                    {new Date(tx.createdAt).toLocaleDateString('fr-FR')}
+                    {new Date(tx.created_at).toLocaleDateString('fr-FR')}
                   </td>
                   <td className="px-4 py-3 text-sm text-bone font-mono">
                     {corridorLabels[tx.corridor] || tx.corridor}
                   </td>
                   <td className="px-4 py-3 text-sm text-emerald-primary font-mono">
-                    {tx.amountSent.toLocaleString('fr-FR')} {tx.currencySent}
+                    {Number(tx.amount_sent).toLocaleString('fr-FR')} {tx.currency_sent}
                   </td>
-                  <td className="px-4 py-3 text-sm text-bone">{tx.beneficiaryName}</td>
+                  <td className="px-4 py-3 text-sm text-bone">{tx.beneficiary_name}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <span className={tx.email_sent ? 'text-emerald-primary' : 'text-ash'}>
+                      {tx.email_sent ? 'Envoye' : 'Non'}
+                    </span>
+                  </td>
                   <td className="px-4 py-3">
                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-mono ${statusColors[tx.status]}`}>
                       {statusLabels[tx.status]}
@@ -217,7 +213,7 @@ export default function TransactionsPage() {
       <Modal
         isOpen={!!selectedTx}
         onClose={() => setSelectedTx(null)}
-        title={`Transaction #${selectedTx?.id}`}
+        title={`Transaction #${selectedTx?.id.slice(0, 8)}`}
         size="lg"
       >
         {selectedTx && (
@@ -229,34 +225,52 @@ export default function TransactionsPage() {
               </div>
               <div>
                 <span className="text-ash">Date:</span>
-                <p className="text-bone font-mono">{new Date(selectedTx.createdAt).toLocaleString('fr-FR')}</p>
+                <p className="text-bone font-mono">{new Date(selectedTx.created_at).toLocaleString('fr-FR')}</p>
               </div>
               <div>
                 <span className="text-ash">Montant envoye:</span>
-                <p className="text-bone font-mono">{selectedTx.amountSent.toLocaleString('fr-FR')} {selectedTx.currencySent}</p>
+                <p className="text-bone font-mono">{Number(selectedTx.amount_sent).toLocaleString('fr-FR')} {selectedTx.currency_sent}</p>
               </div>
               <div>
                 <span className="text-ash">Montant recu:</span>
-                <p className="text-emerald-primary font-mono">{selectedTx.amountReceived.toLocaleString('fr-FR')} {selectedTx.currencyReceived}</p>
+                <p className="text-emerald-primary font-mono">{Number(selectedTx.amount_received).toLocaleString('fr-FR')} {selectedTx.currency_received}</p>
               </div>
               <div>
                 <span className="text-ash">Frais Adoro:</span>
-                <p className="text-bone font-mono">{selectedTx.adoroFee} {selectedTx.currencySent}</p>
+                <p className="text-bone font-mono">{Number(selectedTx.fees_adoro).toLocaleString('fr-FR')} {selectedTx.currency_sent}</p>
               </div>
               <div>
                 <span className="text-ash">Frais Airtel:</span>
-                <p className="text-bone font-mono">{selectedTx.airtelFee} {selectedTx.currencyReceived}</p>
+                <p className="text-bone font-mono">{Number(selectedTx.fees_airtel).toLocaleString('fr-FR')} {selectedTx.currency_received}</p>
+              </div>
+              <div>
+                <span className="text-ash">Total a envoyer:</span>
+                <p className="text-bone font-mono">{Number(selectedTx.total_to_send).toLocaleString('fr-FR')} {selectedTx.currency_sent}</p>
               </div>
               <div>
                 <span className="text-ash">Taux:</span>
-                <p className="text-bone font-mono">{selectedTx.rate}</p>
+                <p className="text-bone font-mono">{selectedTx.rate_used}</p>
               </div>
               <div>
                 <span className="text-ash">Beneficiaire:</span>
-                <p className="text-bone">{selectedTx.beneficiaryName}</p>
-                <p className="text-ash text-xs">{selectedTx.beneficiaryPhone}</p>
+                <p className="text-bone">{selectedTx.beneficiary_name}</p>
+                {selectedTx.beneficiary_phone && <p className="text-ash text-xs">{selectedTx.beneficiary_phone}</p>}
+                {selectedTx.beneficiary_email && <p className="text-ash text-xs">{selectedTx.beneficiary_email}</p>}
+              </div>
+              <div>
+                <span className="text-ash">Email envoye:</span>
+                <p className={selectedTx.email_sent ? 'text-emerald-primary font-mono' : 'text-red-400 font-mono'}>
+                  {selectedTx.email_sent ? 'Oui' : 'Non'}
+                </p>
               </div>
             </div>
+
+            {selectedTx.admin_notes && (
+              <div className="border-t border-dark-600 pt-3">
+                <span className="text-xs font-mono text-ash uppercase">Notes admin:</span>
+                <p className="text-bone text-sm mt-1">{selectedTx.admin_notes}</p>
+              </div>
+            )}
 
             {/* Status update */}
             <div className="border-t border-dark-600 pt-4">

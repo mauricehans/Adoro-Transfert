@@ -17,7 +17,11 @@ from .serializers import (
 
 
 class TransactionCreateView(generics.CreateAPIView):
-    """Public endpoint to submit a new transfer simulation."""
+    """
+    Public endpoint to submit a new transfer simulation.
+    After saving, triggers an email notification to the admin
+    (email address read from BDD Settings table).
+    """
 
     serializer_class = TransactionCreateSerializer
     permission_classes = [permissions.AllowAny]
@@ -26,7 +30,6 @@ class TransactionCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         transaction = serializer.save()
-        # Trigger async notification
         send_notification_email.delay(str(transaction.id))
 
 
@@ -38,7 +41,6 @@ class TransactionListView(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = Transaction.objects.all()
-        # Filtering
         status_filter = self.request.query_params.get("status")
         corridor = self.request.query_params.get("corridor")
         search = self.request.query_params.get("search")
@@ -51,9 +53,7 @@ class TransactionListView(generics.ListAPIView):
             queryset = queryset.filter(corridor=corridor)
         if search:
             queryset = queryset.filter(
-                Q(sender_name__icontains=search)
-                | Q(beneficiary_name__icontains=search)
-                | Q(sender_phone__icontains=search)
+                Q(beneficiary_name__icontains=search)
                 | Q(beneficiary_phone__icontains=search)
             )
         if date_from:
@@ -93,10 +93,11 @@ class TransactionExportView(APIView):
 
         writer = csv.writer(response)
         writer.writerow([
-            "ID", "Corridor", "Montant envoye (EUR)", "Montant recu",
-            "Frais", "Taux", "Expediteur", "Tel Expediteur",
-            "Beneficiaire", "Tel Beneficiaire", "Ville",
-            "Statut", "Date creation",
+            "ID", "Corridor", "Montant envoye", "Devise envoi",
+            "Montant recu", "Devise reception", "Frais Adoro",
+            "Frais Airtel", "Total", "Taux",
+            "Beneficiaire", "Tel", "Email",
+            "Statut", "Email envoye", "Date",
         ])
 
         for t in transactions:
@@ -104,15 +105,18 @@ class TransactionExportView(APIView):
                 str(t.id)[:8],
                 t.corridor,
                 t.amount_sent,
+                t.currency_sent,
                 t.amount_received,
-                t.fees,
-                t.rate_applied,
-                t.sender_name,
-                t.sender_phone,
+                t.currency_received,
+                t.fees_adoro,
+                t.fees_airtel,
+                t.total_to_send,
+                t.rate_used,
                 t.beneficiary_name,
                 t.beneficiary_phone,
-                t.beneficiary_city,
+                t.beneficiary_email,
                 t.get_status_display(),
+                "Oui" if t.email_sent else "Non",
                 t.created_at.strftime("%Y-%m-%d %H:%M"),
             ])
 

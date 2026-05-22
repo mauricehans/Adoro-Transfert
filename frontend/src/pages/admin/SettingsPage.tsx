@@ -70,6 +70,9 @@ export default function SettingsPage() {
           emailRecipient: map.notification_email?.email || prev.emailRecipient,
           activeCurrencies: map.active_currencies?.currencies || prev.activeCurrencies,
           whatsappTemplate: map.whatsapp_template?.template || prev.whatsappTemplate,
+          fcfaTariffs: map.fcfa_tariffs?.tariffs || prev.fcfaTariffs,
+          eurTariffs: map.eur_tariffs?.tariffs || prev.eurTariffs,
+          apiUrls: map.api_urls?.urls || prev.apiUrls,
         }));
       } catch {
         // use defaults
@@ -93,6 +96,15 @@ export default function SettingsPage() {
         }),
         api.patch('/settings/active_currencies/', {
           value: { currencies: settings.activeCurrencies },
+        }),
+        api.patch('/settings/fcfa_tariffs/', {
+          value: { tariffs: settings.fcfaTariffs },
+        }),
+        api.patch('/settings/eur_tariffs/', {
+          value: { tariffs: settings.eurTariffs },
+        }),
+        api.patch('/settings/api_urls/', {
+          value: { urls: settings.apiUrls },
         }),
       ]);
       setSaved(true);

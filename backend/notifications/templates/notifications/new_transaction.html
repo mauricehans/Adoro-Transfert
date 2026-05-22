@@ -22,12 +22,12 @@
         }
         .header {
             text-align: center;
-            border-bottom: 2px solid #2563eb;
+            border-bottom: 2px solid #00B5A0;
             padding-bottom: 15px;
             margin-bottom: 25px;
         }
         .header h1 {
-            color: #2563eb;
+            color: #00B5A0;
             margin: 0;
             font-size: 24px;
         }
@@ -75,7 +75,7 @@
         .amount-highlight {
             font-size: 20px;
             font-weight: 700;
-            color: #2563eb;
+            color: #00B5A0;
         }
         .footer {
             margin-top: 25px;
@@ -94,51 +94,41 @@
             <p class="subtitle">Nouvelle demande de simulation #{{ short_id }}</p>
         </div>
 
-        <p><span class="badge">En attente de contact</span></p>
+        <p><span class="badge">{{ transaction.get_status_display }}</span></p>
 
         <div class="section">
             <h3>Details du transfert</h3>
             <div class="info-grid">
                 <div class="info-row">
                     <span class="info-label">Corridor</span>
-                    <span class="info-value">{{ transaction.get_corridor_display }}</span>
+                    <span class="info-value">{{ transaction.corridor }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Montant envoye</span>
-                    <span class="info-value amount-highlight">{{ transaction.amount_sent }} EUR</span>
+                    <span class="info-value amount-highlight">{{ transaction.amount_sent }} {{ transaction.currency_sent }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Montant recu</span>
-                    <span class="info-value">{{ transaction.amount_received }} {{ transaction.corridor|cut:"EUR_" }}</span>
+                    <span class="info-value">{{ transaction.amount_received }} {{ transaction.currency_received }}</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Frais</span>
-                    <span class="info-value">{{ transaction.fees }} EUR</span>
+                    <span class="info-label">Frais Adoro</span>
+                    <span class="info-value">{{ transaction.fees_adoro }} {{ transaction.currency_sent }}</span>
+                </div>
+                {% if transaction.fees_airtel %}
+                <div class="info-row">
+                    <span class="info-label">Frais Airtel</span>
+                    <span class="info-value">{{ transaction.fees_airtel }} {{ transaction.currency_received }}</span>
+                </div>
+                {% endif %}
+                <div class="info-row">
+                    <span class="info-label">Total a envoyer</span>
+                    <span class="info-value">{{ transaction.total_to_send }} {{ transaction.currency_sent }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Taux applique</span>
-                    <span class="info-value">{{ transaction.rate_applied }}</span>
+                    <span class="info-value">{{ transaction.rate_used }}</span>
                 </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h3>Expediteur</h3>
-            <div class="info-grid">
-                <div class="info-row">
-                    <span class="info-label">Nom</span>
-                    <span class="info-value">{{ transaction.sender_name }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Telephone</span>
-                    <span class="info-value">{{ transaction.sender_phone }}</span>
-                </div>
-                {% if transaction.sender_email %}
-                <div class="info-row">
-                    <span class="info-label">Email</span>
-                    <span class="info-value">{{ transaction.sender_email }}</span>
-                </div>
-                {% endif %}
             </div>
         </div>
 
@@ -149,14 +139,16 @@
                     <span class="info-label">Nom</span>
                     <span class="info-value">{{ transaction.beneficiary_name }}</span>
                 </div>
+                {% if transaction.beneficiary_phone %}
                 <div class="info-row">
                     <span class="info-label">Telephone</span>
                     <span class="info-value">{{ transaction.beneficiary_phone }}</span>
                 </div>
-                {% if transaction.beneficiary_city %}
+                {% endif %}
+                {% if transaction.beneficiary_email %}
                 <div class="info-row">
-                    <span class="info-label">Ville</span>
-                    <span class="info-value">{{ transaction.beneficiary_city }}</span>
+                    <span class="info-label">Email</span>
+                    <span class="info-value">{{ transaction.beneficiary_email }}</span>
                 </div>
                 {% endif %}
             </div>

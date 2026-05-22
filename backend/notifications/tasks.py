@@ -94,6 +94,9 @@ def send_notification_email(self, transaction_id: str):
             recipient_list=[recipient_email],
             fail_silently=False,
         )
+        transaction.email_sent = True
+        transaction.save(update_fields=["email_sent"])
+
         logger.info(f"Email notification sent for transaction #{short_id} to {recipient_email}")
 
         AdminAudit.objects.create(

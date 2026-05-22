@@ -14,7 +14,7 @@ const steps = [
   {
     icon: MessageCircle,
     title: 'Contactez',
-    description: 'Envoyez votre simulation via WhatsApp en un clic.',
+    description: 'Envoyez votre demande via WhatsApp. Un email est aussi envoye a notre equipe.',
   },
   {
     icon: CheckCircle,

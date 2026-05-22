@@ -4,7 +4,7 @@ import Button from './ui/Button';
 import Input from './ui/Input';
 import { useSimulatorSocket } from '../hooks/useSimulatorSocket';
 import { useSimulationStore } from '../store';
-import { buildWhatsAppUrl, getWhatsAppNumber } from '../lib/whatsapp';
+import { buildWhatsAppUrl, getWhatsAppNumber, getWhatsAppTemplate } from '../lib/whatsapp';
 import api from '../lib/api';
 
 const corridors = [
@@ -41,6 +41,7 @@ export default function Simulator() {
   const selectedCorridor = corridors.find((c) => c.value === corridor);
   const needsPhone = ['FR_GA', 'FR_CM', 'FR_SN', 'GA_FR', 'CM_FR', 'SN_FR'].includes(corridor);
   const needsEmail = ['FR_MA', 'MA_FR'].includes(corridor);
+  const showAirtel = ['FR_GA', 'FR_CM', 'FR_SN', 'GA_FR', 'CM_FR', 'SN_FR'].includes(corridor);
 
   useEffect(() => {
     if (amount > 0) {
@@ -59,6 +60,7 @@ export default function Simulator() {
     if (!result || !beneficiaryName) return;
     setSending(true);
     try {
+      // Sauvegarde en BDD + declenchement email automatique cote backend
       await api.post('/transactions/', {
         corridor,
         amount_sent: result.amountSent,
@@ -74,16 +76,22 @@ export default function Simulator() {
         beneficiary_email: beneficiaryEmail,
       });
     } catch {
-      // transaction save failed, proceed anyway
+      // transaction save failed, proceed to WhatsApp anyway
     }
 
-    const whatsappNumber = await getWhatsAppNumber();
+    // Recuperation du numero et du template WhatsApp depuis la BDD
+    const [whatsappNumber, template] = await Promise.all([
+      getWhatsAppNumber(),
+      getWhatsAppTemplate(),
+    ]);
+
     const url = buildWhatsAppUrl({
       result,
       beneficiaryName,
       beneficiaryPhone,
       beneficiaryEmail,
       whatsappNumber,
+      template,
     });
     window.open(url, '_blank');
     setSending(false);
@@ -142,29 +150,31 @@ export default function Simulator() {
         </p>
       </div>
 
-      {/* Airtel fee checkbox */}
-      <div className="mb-5">
-        <label className="flex items-center gap-3 cursor-pointer group">
-          <div className="relative">
-            <input
-              type="checkbox"
-              checked={includeAirtelFee}
-              onChange={(e) => setIncludeAirtelFee(e.target.checked)}
-              className="sr-only peer"
-            />
-            <div className="w-5 h-5 rounded-md border border-dark-500 bg-dark-800 peer-checked:bg-emerald-primary peer-checked:border-emerald-primary transition-colors flex items-center justify-center">
-              {includeAirtelFee && (
-                <svg className="w-3 h-3 text-dark-900" viewBox="0 0 12 12" fill="none">
-                  <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
+      {/* Airtel fee checkbox (Africa corridors only) */}
+      {showAirtel && (
+        <div className="mb-5">
+          <label className="flex items-center gap-3 cursor-pointer group">
+            <div className="relative">
+              <input
+                type="checkbox"
+                checked={includeAirtelFee}
+                onChange={(e) => setIncludeAirtelFee(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-5 h-5 rounded-md border border-dark-500 bg-dark-800 peer-checked:bg-emerald-primary peer-checked:border-emerald-primary transition-colors flex items-center justify-center">
+                {includeAirtelFee && (
+                  <svg className="w-3 h-3 text-dark-900" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </div>
             </div>
-          </div>
-          <span className="text-sm text-ash group-hover:text-bone transition-colors">
-            Inclure frais retrait Airtel Money (3%, max 5 000 FCFA)
-          </span>
-        </label>
-      </div>
+            <span className="text-sm text-ash group-hover:text-bone transition-colors">
+              Inclure frais retrait Airtel Money (3%, max 5 000 FCFA)
+            </span>
+          </label>
+        </div>
+      )}
 
       {/* Beneficiary */}
       <div className="mb-5 space-y-3">
@@ -204,32 +214,32 @@ export default function Simulator() {
           <div className="grid grid-cols-2 gap-2 text-sm">
             <span className="text-ash">Montant envoye:</span>
             <span className="text-bone text-right font-mono">
-              {result.amountSent.toLocaleString('fr-FR')} {result.currencySent}
+              {Number(result.amountSent).toLocaleString('fr-FR')} {result.currencySent}
             </span>
             <span className="text-ash">Frais Adoro:</span>
             <span className="text-bone text-right font-mono">
-              {result.adoroFee.toLocaleString('fr-FR')} {result.currencySent}
+              {Number(result.adoroFee).toLocaleString('fr-FR')} {result.currencySent}
             </span>
-            {result.airtelFee > 0 && (
+            {Number(result.airtelFee) > 0 && (
               <>
                 <span className="text-ash">Frais Airtel:</span>
                 <span className="text-bone text-right font-mono">
-                  {result.airtelFee.toLocaleString('fr-FR')} {result.currencyReceived}
+                  {Number(result.airtelFee).toLocaleString('fr-FR')} {result.currencyReceived}
                 </span>
               </>
             )}
             <span className="text-ash">Total a envoyer:</span>
             <span className="text-emerald-primary text-right font-mono font-bold">
-              {result.totalToSend.toLocaleString('fr-FR')} {result.currencySent}
+              {Number(result.totalToSend).toLocaleString('fr-FR')} {result.currencySent}
             </span>
             <div className="col-span-2 border-t border-dark-600 my-1" />
             <span className="text-ash">Beneficiaire recoit:</span>
             <span className="text-emerald-light text-right font-mono font-bold text-lg">
-              {result.amountReceived.toLocaleString('fr-FR')} {result.currencyReceived}
+              {Number(result.amountReceived).toLocaleString('fr-FR')} {result.currencyReceived}
             </span>
             <span className="text-ash">Taux:</span>
             <span className="text-bone text-right font-mono text-xs">
-              1 {result.currencySent} = {result.rate.toLocaleString('fr-FR')} {result.currencyReceived}
+              1 {result.currencySent} = {Number(result.rate).toLocaleString('fr-FR')} {result.currencyReceived}
             </span>
           </div>
         </div>
@@ -248,7 +258,7 @@ export default function Simulator() {
       </Button>
 
       <p className="mt-3 text-center text-xs text-ash/60">
-        Aucun transfert reel. Vous serez redirige vers WhatsApp.
+        Aucun transfert reel. Vous serez redirige vers WhatsApp. Un email sera aussi envoye a notre equipe.
       </p>
     </div>
   );

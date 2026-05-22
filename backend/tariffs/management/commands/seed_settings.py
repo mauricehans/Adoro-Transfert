@@ -47,6 +47,58 @@ DEFAULT_SETTINGS = [
         "description": "Liste des devises actives sur le simulateur",
         "is_public": True,
     },
+    {
+        "key": "fcfa_tariffs",
+        "value": {"tariffs": [
+            {"min": 1000, "max": 50000, "fee": 1000},
+            {"min": 50001, "max": 100000, "fee": 2000},
+            {"min": 100001, "max": 200000, "fee": 3000},
+            {"min": 200001, "max": 350000, "fee": 4500},
+            {"min": 350001, "max": 500000, "fee": 6000},
+            {"min": 500001, "max": 750000, "fee": 8000},
+            {"min": 750001, "max": 1000000, "fee": 10000},
+            {"min": 1000001, "max": None, "fee": 12000},
+        ]},
+        "description": "Grille tarifaire pour les envois en FCFA",
+        "is_public": True,
+    },
+    {
+        "key": "eur_tariffs",
+        "value": {"tariffs": [
+            {"min": 1, "max": 50, "fee": 3},
+            {"min": 51, "max": 100, "fee": 5},
+            {"min": 101, "max": 200, "fee": 8},
+            {"min": 201, "max": 350, "fee": 10},
+            {"min": 351, "max": 500, "fee": 12},
+            {"min": 501, "max": 750, "fee": 15},
+            {"min": 751, "max": 1000, "fee": 18},
+            {"min": 1001, "max": None, "fee": 22},
+        ]},
+        "description": "Grille tarifaire pour les envois en EUR",
+        "is_public": True,
+    },
+    {
+        "key": "mad_tariffs",
+        "value": {"tariffs": [
+            {"min": 10, "max": 500, "fee": 10},
+            {"min": 501, "max": 1000, "fee": 20},
+            {"min": 1001, "max": 2000, "fee": 35},
+            {"min": 2001, "max": 5000, "fee": 50},
+            {"min": 5001, "max": 10000, "fee": 80},
+            {"min": 10001, "max": None, "fee": 120},
+        ]},
+        "description": "Grille tarifaire pour les envois en MAD (Maroc)",
+        "is_public": True,
+    },
+    {
+        "key": "api_urls",
+        "value": {"urls": [
+            {"name": "ECB", "url": "https://api.exchangeratesapi.io/v1/latest"},
+            {"name": "XE", "url": "https://xecdapi.xe.com/v1/convert_from"},
+        ]},
+        "description": "URLs des sources API pour les taux de change",
+        "is_public": False,
+    }
 ]
 
 

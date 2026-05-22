@@ -1,79 +1,153 @@
 """
 Transfer simulation calculator.
 Computes fees, applies exchange rate, returns breakdown.
+Rate is fetched from the database (RatesHistory), with a static fallback.
 """
 
 from decimal import Decimal, ROUND_HALF_UP
 
-from tariffs.models import FeesGrid
+from tariffs.models import Settings
+
+
+STATIC_RATES = {
+    "XAF": Decimal("655.957"),
+    "XOF": Decimal("655.957"),
+    "MAD": Decimal("10.90"),
+    "USD": Decimal("1.09"),
+}
+
+CORRIDOR_CURRENCY_MAP = {
+    "FR_GA": "XAF",
+    "GA_FR": "XAF",
+    "FR_CM": "XAF",
+    "CM_FR": "XAF",
+    "FR_SN": "XOF",
+    "SN_FR": "XOF",
+    "FR_MA": "MAD",
+    "MA_FR": "MAD",
+}
+
+# Corridors where Airtel Money withdrawal fee applies
+AIRTEL_CORRIDORS = {"FR_GA", "GA_FR", "FR_CM", "CM_FR", "FR_SN", "SN_FR"}
+
+# Mapping: which tariff key to use for non-EUR source corridors
+NON_EUR_TARIFF_KEY = {
+    "GA_FR": "fcfa_tariffs",
+    "CM_FR": "fcfa_tariffs",
+    "SN_FR": "fcfa_tariffs",
+    "MA_FR": "mad_tariffs",
+}
+
+
+def get_tariffs(key):
+    try:
+        return Settings.objects.get(key=key).value.get("tariffs", [])
+    except Settings.DoesNotExist:
+        return []
+
+
+def get_rate_for_corridor(corridor: str) -> Decimal:
+    """
+    Get the latest exchange rate for a corridor from the database.
+    Falls back to static rates if no data in BDD.
+    """
+    from rates.models import RatesHistory
+
+    target_currency = CORRIDOR_CURRENCY_MAP.get(corridor, "XAF")
+
+    latest = RatesHistory.objects.first()
+    if latest and latest.rates:
+        db_rate = latest.rates.get(target_currency)
+        if db_rate is not None:
+            return Decimal(str(db_rate))
+
+    return STATIC_RATES.get(target_currency, Decimal("655.957"))
 
 
 def recalculate(state: dict) -> dict:
     """
     Recalculate a transfer simulation based on the current state.
-
-    Args:
-        state: dict with keys:
-            - corridor: str (e.g., "EUR_XAF" or "EUR_XOF")
-            - amount: float/str (amount in EUR)
-            - includeAirtel: bool
-            - rate: float/str (exchange rate EUR -> target currency)
-
-    Returns:
-        dict with breakdown:
-            - amount_sent: Decimal
-            - fees: Decimal
-            - total_debited: Decimal
-            - rate_applied: Decimal
-            - amount_received: Decimal
+    Rate is fetched from the database automatically based on the corridor.
     """
-    corridor = state.get("corridor", "EUR_XAF")
+    corridor = state.get("corridor", "FR_GA")
     amount = Decimal(str(state.get("amount", 0)))
-    include_airtel = state.get("includeAirtel", False)
-    rate = Decimal(str(state.get("rate", "655.957")))
+
+    include_airtel = state.get("include_airtel_fee", False)
+    if "includeAirtel" in state and "include_airtel_fee" not in state:
+        include_airtel = state.get("includeAirtel", False)
+
+    # Airtel only applies to Africa corridors, not Morocco
+    if corridor not in AIRTEL_CORRIDORS:
+        include_airtel = False
+
+    # Rate from BDD (ignore any client-sent rate)
+    rate = get_rate_for_corridor(corridor)
+
+    is_eur_source = corridor.startswith("FR_")
+    target_currency = CORRIDOR_CURRENCY_MAP.get(corridor, "XAF")
+    currency_sent = "EUR" if is_eur_source else target_currency
+    currency_received = target_currency if is_eur_source else "EUR"
 
     if amount <= 0:
         return {
+            "corridor": corridor,
             "amount_sent": Decimal("0"),
-            "fees": Decimal("0"),
-            "total_debited": Decimal("0"),
-            "rate_applied": rate,
+            "currency_sent": currency_sent,
+            "adoro_fee": Decimal("0"),
+            "airtel_fee": Decimal("0"),
+            "total_to_send": Decimal("0"),
             "amount_received": Decimal("0"),
+            "currency_received": currency_received,
+            "rate": rate,
         }
 
-    # Find applicable fee from the grid
-    fee_entry = (
-        FeesGrid.objects.filter(
-            corridor=corridor,
-            min_amount__lte=amount,
-            max_amount__gte=amount,
-            active=True,
-        )
-        .first()
-    )
+    if is_eur_source:
+        tariffs = get_tariffs("eur_tariffs")
+    else:
+        tariff_key = NON_EUR_TARIFF_KEY.get(corridor, "fcfa_tariffs")
+        tariffs = get_tariffs(tariff_key)
 
-    fees = Decimal("0")
-    if fee_entry:
-        # Fixed fee + percentage fee
-        fees = fee_entry.fee_amount + (amount * fee_entry.fee_percent / Decimal("100"))
-        fees = fees.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    adoro_fee = Decimal("0")
+    for t in tariffs:
+        min_amt = Decimal(str(t.get("min", 0)))
+        max_amt = t.get("max")
+        if max_amt is not None:
+            max_amt = Decimal(str(max_amt))
 
-    # Airtel Money surcharge (flat 500 FCFA converted back to EUR)
-    airtel_surcharge_eur = Decimal("0")
-    if include_airtel and rate > 0:
-        airtel_surcharge_fcfa = Decimal("500")
-        airtel_surcharge_eur = (airtel_surcharge_fcfa / rate).quantize(
-            Decimal("0.01"), rounding=ROUND_HALF_UP
-        )
-        fees += airtel_surcharge_eur
+        if amount >= min_amt and (max_amt is None or amount <= max_amt):
+            adoro_fee = Decimal(str(t.get("fee", 0)))
+            break
 
-    total_debited = amount + fees
-    amount_received = (amount * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    if is_eur_source:
+        amount_received = (amount * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    else:
+        amount_received = (amount / rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if rate > 0 else Decimal("0")
+
+    airtel_fee_target = Decimal("0")
+    airtel_fee_source = Decimal("0")
+
+    if include_airtel:
+        xaf_amount = amount_received if is_eur_source else amount
+        calculated_fee = (xaf_amount * Decimal("0.03")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        airtel_fee_xaf = min(calculated_fee, Decimal("5000"))
+
+        if is_eur_source:
+            airtel_fee_target = airtel_fee_xaf
+            airtel_fee_source = (airtel_fee_xaf / rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if rate > 0 else Decimal("0")
+        else:
+            airtel_fee_source = airtel_fee_xaf
+            airtel_fee_target = (airtel_fee_xaf / rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if rate > 0 else Decimal("0")
+
+    total_to_send = amount + adoro_fee + airtel_fee_source
 
     return {
+        "corridor": corridor,
         "amount_sent": amount,
-        "fees": fees,
-        "total_debited": total_debited,
-        "rate_applied": rate,
+        "currency_sent": currency_sent,
+        "adoro_fee": adoro_fee,
+        "airtel_fee": airtel_fee_target,
+        "total_to_send": total_to_send,
         "amount_received": amount_received,
+        "currency_received": currency_received,
+        "rate": rate,
     }
