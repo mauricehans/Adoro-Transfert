@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Activity, TrendingUp, Clock, BarChart3, CheckCircle, AlertCircle } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Activity, TrendingUp, Clock, BarChart3 } from 'lucide-react';
 import api from '../../lib/api';
 
 interface KPIs {
@@ -10,19 +9,6 @@ interface KPIs {
   totalTransactions: number;
 }
 
-interface RatePoint {
-  date: string;
-  EUR_XAF: number;
-  EUR_XOF: number;
-  EUR_MAD: number;
-}
-
-interface ApiStatus {
-  source: string;
-  status: 'online' | 'offline';
-  lastUpdate: string;
-}
-
 export default function DashboardPage() {
   const [kpis, setKpis] = useState<KPIs>({
     simulations24h: 0,
@@ -30,25 +16,15 @@ export default function DashboardPage() {
     simulations30j: 0,
     totalTransactions: 0,
   });
-  const [rateHistory, setRateHistory] = useState<RatePoint[]>([]);
-  const [apiStatus, setApiStatus] = useState<ApiStatus[]>([]);
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const [kpisRes, ratesRes, statusRes] = await Promise.all([
-          api.get('/kpis/'),
-          api.get('/rates/history/?days=7'),
-          api.get('/api-status/'),
-        ]);
+        const kpisRes = await api.get('/kpis/');
         setKpis(kpisRes.data);
-        setRateHistory(ratesRes.data.results || ratesRes.data);
-        setApiStatus(statusRes.data);
       } catch {
         // Use fallback data for now if endpoints are missing
         setKpis({ simulations24h: 0, simulations7j: 0, simulations30j: 0, totalTransactions: 0 });
-        setRateHistory([]);
-        setApiStatus([]);
       }
     };
     fetchDashboard();
@@ -76,77 +52,6 @@ export default function DashboardPage() {
             <p className="text-3xl font-display text-bone">{card.value.toLocaleString('fr-FR')}</p>
           </div>
         ))}
-      </div>
-
-      {/* Rate Chart */}
-      <div className="glass-card p-6 mb-8">
-        <h2 className="font-display text-xl text-bone mb-4">EVOLUTION DES TAUX (7 JOURS)</h2>
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={rateHistory}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1E3A35" />
-              <XAxis dataKey="date" stroke="#8BA8A4" fontSize={12} />
-              <YAxis stroke="#8BA8A4" fontSize={12} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#111F1C',
-                  border: '1px solid rgba(0,181,160,0.2)',
-                  borderRadius: '12px',
-                  color: '#F4FFFE',
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="EUR_XAF"
-                stroke="#00B5A0"
-                strokeWidth={2}
-                dot={false}
-                name="EUR/XAF"
-              />
-              <Line
-                type="monotone"
-                dataKey="EUR_MAD"
-                stroke="#8B5CF6"
-                strokeWidth={2}
-                dot={false}
-                name="EUR/MAD"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* API Status */}
-      <div className="glass-card p-6">
-        <h2 className="font-display text-xl text-bone mb-4">STATUT DES SOURCES API</h2>
-        <div className="space-y-3">
-          {apiStatus.map((source, i) => (
-            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-dark-800/50">
-              <div className="flex items-center gap-3">
-                {source.status === 'online' ? (
-                  <CheckCircle size={18} className="text-emerald-primary" />
-                ) : (
-                  <AlertCircle size={18} className="text-red-400" />
-                )}
-                <span className="text-bone text-sm font-medium">{source.source}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span
-                  className={`px-2.5 py-0.5 rounded-full text-xs font-mono ${
-                    source.status === 'online'
-                      ? 'bg-emerald-primary/10 text-emerald-primary'
-                      : 'bg-red-500/10 text-red-400'
-                  }`}
-                >
-                  {source.status}
-                </span>
-                <span className="text-ash text-xs font-mono">
-                  {new Date(source.lastUpdate).toLocaleTimeString('fr-FR')}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "rates",
     "tariffs",
     "notifications",
+    "kpis",
 ]
 
 MIDDLEWARE = [

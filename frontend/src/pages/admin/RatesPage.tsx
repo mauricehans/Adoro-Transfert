@@ -15,8 +15,6 @@ interface RateEntry {
 
 interface RateChartPoint {
   date: string;
-  EUR_XAF: number;
-  EUR_XOF: number;
   EUR_MAD: number;
 }
 
@@ -40,7 +38,18 @@ export default function RatesPage() {
         api.get('/rates/history/?days=30'),
       ]);
       setHistory(historyRes.data.results || historyRes.data);
-      setChartData(chartRes.data.results || chartRes.data);
+      
+      // On extrait uniquement les données pour le MAD
+      const rawChartData = chartRes.data.results || chartRes.data;
+      const formattedChartData = rawChartData
+        .filter((entry: any) => entry.source === 'exchangeratesapi.io' && entry.rates && entry.rates.MAD)
+        .map((entry: any) => ({
+          date: entry.date,
+          EUR_MAD: entry.rates.MAD,
+        }))
+        .reverse(); // On inverse pour avoir l'ordre chronologique de gauche à droite
+      
+      setChartData(formattedChartData);
     } catch {
       // Afficher une erreur ou simplement vider les donnees
       setHistory([]);
@@ -51,7 +60,9 @@ export default function RatesPage() {
   };
 
   const filteredHistory =
-    filterPair === 'all' ? history : history.filter((r) => r.rates && r.rates[filterPair.split('_')[1]] !== undefined);
+    filterPair === 'all' 
+      ? history.filter((r) => r.source === 'exchangeratesapi.io') 
+      : history.filter((r) => r.source === 'exchangeratesapi.io' && r.rates && r.rates[filterPair.split('_')[1]] !== undefined);
 
   const handleRefresh = async () => {
     setLoading(true);
@@ -75,16 +86,17 @@ export default function RatesPage() {
         </Button>
       </div>
 
-      {/* Chart */}
+
+
+      {/* Chart - EUR/MAD Only */}
       <div className="glass-card p-6 mb-8">
-        <h2 className="font-display text-xl text-bone mb-4">VARIATION SUR 30 JOURS</h2>
+        <h2 className="font-display text-xl text-bone mb-4">VARIATION EUR/MAD SUR 30 JOURS</h2>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1E3A35" />
               <XAxis dataKey="date" stroke="#8BA8A4" fontSize={11} />
-              <YAxis yAxisId="left" stroke="#8BA8A4" fontSize={11} domain={['auto', 'auto']} />
-              <YAxis yAxisId="right" orientation="right" stroke="#8BA8A4" fontSize={11} domain={['auto', 'auto']} />
+              <YAxis stroke="#8BA8A4" fontSize={11} domain={['dataMin - 0.1', 'dataMax + 0.1']} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#111F1C',
@@ -95,30 +107,12 @@ export default function RatesPage() {
               />
               <Legend />
               <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="EUR_XAF"
-                stroke="#00B5A0"
-                strokeWidth={2}
-                dot={false}
-                name="EUR/XAF"
-              />
-              <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="EUR_XOF"
-                stroke="#00D4BC"
-                strokeWidth={2}
-                dot={false}
-                name="EUR/XOF"
-              />
-              <Line
-                yAxisId="right"
                 type="monotone"
                 dataKey="EUR_MAD"
                 stroke="#8B5CF6"
                 strokeWidth={2}
-                dot={false}
+                dot={true}
+                activeDot={{ r: 6 }}
                 name="EUR/MAD"
               />
             </LineChart>

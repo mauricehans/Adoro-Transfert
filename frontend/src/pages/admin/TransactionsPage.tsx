@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Download, Filter, Eye, RefreshCw } from 'lucide-react';
+import { Download, Filter, Eye, RefreshCw, Trash2 } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import api from '../../lib/api';
@@ -89,6 +89,22 @@ export default function TransactionsPage() {
       setSelectedTx(null);
     } catch {
       // handle error silently
+    }
+  };
+
+  const deleteTransaction = async (id: string) => {
+    if (!window.confirm('Etes-vous sur de vouloir supprimer cette transaction ? Cette action est irreversible.')) {
+      return;
+    }
+    
+    try {
+      await api.delete(`/transactions/${id}/`);
+      setTransactions((prev) => prev.filter((tx) => tx.id !== id));
+      if (selectedTx?.id === id) {
+        setSelectedTx(null);
+      }
+    } catch {
+      alert('Erreur lors de la suppression de la transaction.');
     }
   };
 
@@ -195,12 +211,22 @@ export default function TransactionsPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      onClick={() => setSelectedTx(tx)}
-                      className="p-1.5 rounded-lg text-ash hover:text-bone hover:bg-dark-600 transition-colors"
-                    >
-                      <Eye size={16} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setSelectedTx(tx)}
+                        className="p-1.5 rounded-lg text-ash hover:text-bone hover:bg-dark-600 transition-colors"
+                        title="Voir les details"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={() => deleteTransaction(tx.id)}
+                        className="p-1.5 rounded-lg text-red-400/70 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                        title="Supprimer la transaction"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

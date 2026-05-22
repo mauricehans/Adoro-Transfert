@@ -35,6 +35,8 @@ services:
     build: ./backend
     command: celery -A adoro worker -l info
     env_file: .env
+    volumes:
+      - ./backend:/app
     depends_on:
       - redis
       - postgres
@@ -43,6 +45,8 @@ services:
     build: ./backend
     command: celery -A adoro beat -l info
     env_file: .env
+    volumes:
+      - ./backend:/app
     depends_on:
       - redis
       - postgres

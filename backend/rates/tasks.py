@@ -68,10 +68,10 @@ def _patch_fcfa(rates: dict) -> dict:
     return rates
 
 
-def _try_exchangeratesapi() -> dict | None:
+def _try_exchangeratesapi(target_date: date = None) -> dict | None:
     """
     Source primaire : exchangeratesapi.io
-    GET https://api.exchangeratesapi.io/v1/latest?access_key=KEY&base=EUR&symbols=...
+    GET https://api.exchangeratesapi.io/v1/YYYY-MM-DD?access_key=KEY&base=EUR&symbols=...
 
     Sur le plan free, la `base` est forcement EUR — on l'envoie quand meme
     pour etre explicite, et on remappe les devises si besoin.
@@ -84,9 +84,11 @@ def _try_exchangeratesapi() -> dict | None:
         )
         return None
 
+    url = f"https://api.exchangeratesapi.io/v1/{target_date.strftime('%Y-%m-%d')}" if target_date else EXCHANGERATESAPI_URL
+
     try:
         resp = requests.get(
-            EXCHANGERATESAPI_URL,
+            url,
             params={
                 "access_key": api_key,
                 "base": "EUR",
@@ -127,15 +129,16 @@ def _try_exchangeratesapi() -> dict | None:
     return None
 
 
-def _try_frankfurter() -> dict | None:
+def _try_frankfurter(target_date: date = None) -> dict | None:
     """
     Source secondaire : frankfurter.app (donnees BCE, sans cle).
-    GET https://api.frankfurter.app/latest?from=EUR&to=USD,MAD,GBP
+    GET https://api.frankfurter.app/YYYY-MM-DD?from=EUR&to=USD,MAD,GBP
     Ne supporte pas XAF/XOF : on les patche avec la parite fixe.
     """
+    url = f"https://api.frankfurter.app/{target_date.strftime('%Y-%m-%d')}" if target_date else FRANKFURTER_URL
     try:
         resp = requests.get(
-            FRANKFURTER_URL,
+            url,
             params={"from": "EUR", "to": "USD,MAD,GBP"},
             timeout=REQUEST_TIMEOUT,
         )
@@ -168,17 +171,20 @@ def _static_rates() -> dict:
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
-def fetch_daily_rates(self):
+def fetch_daily_rates(self, target_date_str=None):
     """
     Recupere les taux du jour.
     Ordre : exchangeratesapi.io -> frankfurter.app -> static.
     Sauvegarde dans RatesHistory et nettoie les entrees > 30 jours.
     """
-    today = date.today()
+    if target_date_str:
+        today = date.fromisoformat(target_date_str)
+    else:
+        today = date.today()
 
-    result = _try_exchangeratesapi()
+    result = _try_exchangeratesapi(today)
     if result is None:
-        result = _try_frankfurter()
+        result = _try_frankfurter(today)
     if result is None:
         result = _static_rates()
 

@@ -18,4 +18,5 @@ urlpatterns = [
     path("api/", include("tariffs.urls")),
     path("api/", include("simulator.urls")),
     path("api/", include("accounts.urls")),
+    path("api/", include("kpis.urls")),
 ]
