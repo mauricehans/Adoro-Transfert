@@ -6,10 +6,11 @@ import api from '../../lib/api';
 
 interface RateEntry {
   id: number;
-  pair: string;
-  rate: number;
+  date: string;
   source: string;
-  createdAt: string;
+  base_currency: string;
+  rates: Record<string, number>;
+  fetched_at: string;
 }
 
 interface RateChartPoint {
@@ -35,44 +36,40 @@ export default function RatesPage() {
     setLoading(true);
     try {
       const [historyRes, chartRes] = await Promise.all([
-        api.get('/admin/rates/'),
-        api.get('/admin/rates/history/?days=30'),
+        api.get('/rates/history/'),
+        api.get('/rates/history/?days=30'),
       ]);
       setHistory(historyRes.data.results || historyRes.data);
       setChartData(chartRes.data.results || chartRes.data);
     } catch {
-      // Fallback data
-      const mockHistory: RateEntry[] = pairs.flatMap((pair, pi) =>
-        Array.from({ length: 10 }, (_, i) => ({
-          id: pi * 10 + i + 1,
-          pair,
-          rate: pair === 'EUR_MAD' ? 10.85 + Math.random() * 0.1 : 655.96,
-          source: i % 2 === 0 ? 'ECB' : 'XE',
-          createdAt: new Date(Date.now() - i * 3600000).toISOString(),
-        }))
-      );
-      setHistory(mockHistory);
-      setChartData(
-        Array.from({ length: 30 }, (_, i) => ({
-          date: new Date(Date.now() - (29 - i) * 86400000).toISOString().split('T')[0],
-          EUR_XAF: 655.96,
-          EUR_XOF: 655.96,
-          EUR_MAD: 10.8 + Math.random() * 0.2,
-        }))
-      );
+      // Afficher une erreur ou simplement vider les donnees
+      setHistory([]);
+      setChartData([]);
     } finally {
       setLoading(false);
     }
   };
 
   const filteredHistory =
-    filterPair === 'all' ? history : history.filter((r) => r.pair === filterPair);
+    filterPair === 'all' ? history : history.filter((r) => r.rates && r.rates[filterPair.split('_')[1]] !== undefined);
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      await api.post('/rates/refresh/');
+      await fetchRates();
+    } catch {
+      // Ignore
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="font-display text-3xl text-bone">TAUX DE CHANGE</h1>
-        <Button onClick={fetchRates} loading={loading} variant="secondary" size="sm">
+        <Button onClick={handleRefresh} loading={loading} variant="secondary" size="sm">
           <RefreshCw size={16} className="mr-2" />
           Actualiser
         </Button>
@@ -160,24 +157,37 @@ export default function RatesPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredHistory.slice(0, 20).map((entry) => (
-                <tr key={entry.id} className="border-b border-dark-700/50 hover:bg-dark-700/30 transition-colors">
-                  <td className="px-6 py-3 text-sm text-bone font-mono">
-                    {entry.pair.replace('_', '/')}
-                  </td>
-                  <td className="px-6 py-3 text-sm text-emerald-primary font-mono">
-                    {entry.rate.toFixed(4)}
-                  </td>
-                  <td className="px-6 py-3">
-                    <span className="px-2 py-0.5 rounded-full bg-dark-600 text-xs text-ash font-mono">
-                      {entry.source}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-sm text-ash font-mono">
-                    {new Date(entry.createdAt).toLocaleString('fr-FR')}
-                  </td>
-                </tr>
-              ))}
+              {filteredHistory.slice(0, 20).flatMap((entry) => {
+                const pairsToDisplay = filterPair === 'all' 
+                  ? pairs 
+                  : [filterPair];
+                  
+                return pairsToDisplay.map((pair) => {
+                  const targetCurrency = pair.split('_')[1];
+                  const rate = entry.rates ? entry.rates[targetCurrency] : null;
+                  
+                  if (!rate) return null;
+                  
+                  return (
+                    <tr key={`${entry.id}-${pair}`} className="border-b border-dark-700/50 hover:bg-dark-700/30 transition-colors">
+                      <td className="px-6 py-3 text-sm text-bone font-mono">
+                        {pair.replace('_', '/')}
+                      </td>
+                      <td className="px-6 py-3 text-sm text-emerald-primary font-mono">
+                        {Number(rate).toFixed(4)}
+                      </td>
+                      <td className="px-6 py-3">
+                        <span className="px-2 py-0.5 rounded-full bg-dark-600 text-xs text-ash font-mono">
+                          {entry.source}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3 text-sm text-ash font-mono">
+                        {entry.date ? new Date(entry.date).toLocaleDateString('fr-FR') : ''}
+                      </td>
+                    </tr>
+                  );
+                }).filter(Boolean);
+              })}
             </tbody>
           </table>
         </div>

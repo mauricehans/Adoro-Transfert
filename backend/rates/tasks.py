@@ -8,7 +8,7 @@ Two-tier strategy:
 """
 
 import logging
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import requests
@@ -50,40 +50,50 @@ def _normalize_rates(raw_rates: dict) -> dict:
     return out
 
 
-def _try_exchangerate_host() -> dict | None:
+def _try_exchangeratesapi() -> dict | None:
     """
-    Primary source: exchangerate.host
-    Endpoint: https://api.exchangerate.host/latest?base=EUR&symbols=...
-    NB: The free tier no longer returns a `success` key — we only check `rates`.
+    Primary source: exchangeratesapi.io
+    Endpoint: http://api.exchangeratesapi.io/v1/latest?access_key=...&base=EUR&symbols=...
     """
     try:
         resp = requests.get(
-            "https://api.exchangerate.host/latest",
-            params={"base": "EUR", "symbols": ",".join(REQUIRED_SYMBOLS)},
+            "http://api.exchangeratesapi.io/v1/latest",
+            params={
+                "access_key": "fb2ecc203324df1d2f7926b715dc2b0f",
+                "base": "EUR",
+                "symbols": ",".join(REQUIRED_SYMBOLS)
+            },
             timeout=REQUEST_TIMEOUT,
         )
         resp.raise_for_status()
         data = resp.json()
+        
+        if not data.get("success"):
+            logger.warning(f"exchangeratesapi.io returned failure: {data}")
+            return None
+            
         raw = data.get("rates") or {}
         rates = _normalize_rates(raw)
+        
         # We need at least the FCFA pair for the simulator to be useful.
-        # If primary returns nothing usable, treat as failure.
         if not rates or "XAF" not in rates:
-            logger.warning(f"exchangerate.host returned unusable payload: {data}")
+            logger.warning(f"exchangeratesapi.io returned unusable payload: {data}")
             return None
+            
         # If FCFA is missing or out of sane bounds, patch with fixed parity
         if "XAF" not in rates or not (600 < rates["XAF"] < 700):
             rates["XAF"] = STATIC_FCFA_RATE
         if "XOF" not in rates or not (600 < rates["XOF"] < 700):
             rates["XOF"] = STATIC_FCFA_RATE
+            
         return {
-            "source": RatesHistory.Source.EXCHANGERATE_HOST,
+            "source": "exchangeratesapi.io",
             "rates": rates,
         }
     except requests.RequestException as e:
-        logger.warning(f"exchangerate.host request failed: {e}")
+        logger.warning(f"exchangeratesapi.io request failed: {e}")
     except (ValueError, KeyError) as e:
-        logger.warning(f"exchangerate.host bad response: {e}")
+        logger.warning(f"exchangeratesapi.io bad response: {e}")
     return None
 
 
@@ -134,12 +144,12 @@ def _static_rates() -> dict:
 def fetch_daily_rates(self):
     """
     Fetch daily exchange rates.
-    Order: exchangerate.host → frankfurter.app → static.
+    Order: exchangeratesapi.io → frankfurter.app → static.
     Saves to RatesHistory and broadcasts via Channels.
     """
     today = date.today()
 
-    result = _try_exchangerate_host()
+    result = _try_exchangeratesapi()
     if result is None:
         result = _try_frankfurter()
     if result is None:
@@ -147,8 +157,8 @@ def fetch_daily_rates(self):
 
     rates_entry, created = RatesHistory.objects.update_or_create(
         date=today,
-        source=result["source"],
         defaults={
+            "source": result["source"],
             "base_currency": "EUR",
             "rates": result["rates"],
         },
@@ -159,24 +169,11 @@ def fetch_daily_rates(self):
         f"from {result['source']}: {result['rates']}"
     )
 
-    # Broadcast via Channels to all connected WebSocket clients.
-    # Payload shape matches what the React client expects (see rates:update handler).
-    channel_layer = get_channel_layer()
-    if channel_layer is not None:
-        try:
-            async_to_sync(channel_layer.group_send)(
-                "rates_global",
-                {
-                    "type": "rates.update",
-                    "payload": {
-                        "date": str(today),
-                        "source": result["source"],
-                        "rates": result["rates"],
-                    },
-                },
-            )
-        except Exception as e:
-            logger.warning(f"Channels broadcast failed: {e}")
+    # Delete rates older than 30 days
+    thirty_days_ago = today - timedelta(days=30)
+    deleted_count, _ = RatesHistory.objects.filter(date__lt=thirty_days_ago).delete()
+    if deleted_count > 0:
+        logger.info(f"Deleted {deleted_count} old rate entries (older than 30 days).")
 
     return {
         "date": str(today),

@@ -5,7 +5,7 @@ class RatesHistory(models.Model):
     """Historical exchange rates fetched from external sources."""
 
     class Source(models.TextChoices):
-        EXCHANGERATE_HOST = "exchangerate_host", "exchangerate.host"
+        EXCHANGERATES_API = "exchangeratesapi.io", "exchangeratesapi.io"
         FRANKFURTER = "frankfurter", "frankfurter.dev"
         STATIC = "static", "Static (fixed FCFA rate)"
 
@@ -18,7 +18,6 @@ class RatesHistory(models.Model):
     )
 
     class Meta:
-        unique_together = ("date", "source")
         ordering = ["-date", "-fetched_at"]
         verbose_name = "Rates History"
         verbose_name_plural = "Rates History"

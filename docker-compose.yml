@@ -31,18 +31,6 @@ services:
     ports:
       - "8000:8000"
 
-  ws:
-    build: ./backend
-    command: daphne -b 0.0.0.0 -p 8001 adoro.asgi:application
-    env_file: .env
-    volumes:
-      - ./backend:/app
-    depends_on:
-      - postgres
-      - redis
-    ports:
-      - "8001:8001"
-
   celery_worker:
     build: ./backend
     command: celery -A adoro worker -l info
@@ -70,7 +58,6 @@ services:
       - ./frontend/dist:/usr/share/nginx/html:ro
     depends_on:
       - web
-      - ws
 
 volumes:
   pg_data:

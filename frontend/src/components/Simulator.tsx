@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { ArrowRightLeft, Wifi, WifiOff, MessageCircle, User, Phone, Mail } from 'lucide-react';
+import { ArrowRightLeft, MessageCircle, User, Phone, Mail, Activity } from 'lucide-react';
 import Button from './ui/Button';
 import Input from './ui/Input';
-import { useSimulatorSocket } from '../hooks/useSimulatorSocket';
 import { useSimulationStore } from '../store';
 import { buildWhatsAppUrl, getWhatsAppNumber, getWhatsAppTemplate } from '../lib/whatsapp';
 import api from '../lib/api';
@@ -19,7 +18,6 @@ const corridors = [
 ];
 
 export default function Simulator() {
-  const { sendSimulation, isConnected } = useSimulatorSocket();
   const {
     corridor,
     amount,
@@ -34,9 +32,11 @@ export default function Simulator() {
     setBeneficiaryName,
     setBeneficiaryPhone,
     setBeneficiaryEmail,
+    setResult,
   } = useSimulationStore();
 
   const [sending, setSending] = useState(false);
+  const [calculating, setCalculating] = useState(false);
 
   const selectedCorridor = corridors.find((c) => c.value === corridor);
   const needsPhone = ['FR_GA', 'FR_CM', 'FR_SN', 'GA_FR', 'CM_FR', 'SN_FR'].includes(corridor);
@@ -44,17 +44,44 @@ export default function Simulator() {
   const showAirtel = ['FR_GA', 'FR_CM', 'FR_SN', 'GA_FR', 'CM_FR', 'SN_FR'].includes(corridor);
 
   useEffect(() => {
-    if (amount > 0) {
-      const timer = setTimeout(() => {
-        sendSimulation({
+    const calculateSimulation = async () => {
+      if (amount <= 0) {
+        setResult(null);
+        return;
+      }
+      
+      setCalculating(true);
+      try {
+        const { data } = await api.post('/simulator/calculate/', {
           corridor,
           amount,
           include_airtel_fee: includeAirtelFee,
         });
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [corridor, amount, includeAirtelFee, sendSimulation]);
+        
+        setResult({
+          corridor: data.corridor,
+          amountSent: data.amount_sent,
+          currencySent: data.currency_sent,
+          adoroFee: data.adoro_fee,
+          airtelFee: data.airtel_fee,
+          totalToSend: data.total_to_send,
+          amountReceived: data.amount_received,
+          currencyReceived: data.currency_received,
+          rate: data.rate,
+        });
+      } catch (error) {
+        console.error("Erreur de calcul:", error);
+      } finally {
+        setCalculating(false);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      calculateSimulation();
+    }, 400); // Debounce de 400ms
+
+    return () => clearTimeout(timer);
+  }, [corridor, amount, includeAirtelFee, setResult]);
 
   const handleSubmit = async () => {
     if (!result || !beneficiaryName || amount <= 0) return;
@@ -96,31 +123,35 @@ export default function Simulator() {
   return (
     <div className="glass-card p-6 md:p-8 w-full max-w-xl mx-auto animate-glow">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="font-display text-2xl text-bone tracking-wide">SIMULATEUR</h2>
+      <div className="text-center mb-8">
+        <h2 className="font-display text-3xl text-bone tracking-wide mb-2">Simulateur Adoro</h2>
+        <p className="text-ash text-sm">Trouvez combien vous devez envoyer</p>
+      </div>
+
+      <div className="flex items-center justify-end mb-6">
         <div className="flex items-center gap-1.5">
-          {isConnected ? (
-            <Wifi size={14} className="text-emerald-primary" />
+          {calculating ? (
+            <Activity size={14} className="text-emerald-primary animate-pulse" />
           ) : (
-            <WifiOff size={14} className="text-red-400" />
+            <Activity size={14} className="text-emerald-primary" />
           )}
           <span className="text-xs font-mono text-ash">
-            {isConnected ? 'Live' : 'Hors ligne'}
+            {calculating ? 'Calcul...' : 'Pret'}
           </span>
         </div>
       </div>
 
       {/* Corridor selector */}
-      <div className="mb-5">
+      <div className="mb-6">
         <label className="block text-sm font-mono text-ash mb-1.5 uppercase tracking-wider">
-          Corridor
+          Sens de la transaction :
         </label>
         <div className="relative">
           <ArrowRightLeft size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ash" />
           <select
             value={corridor}
             onChange={(e) => setCorridor(e.target.value)}
-            className="w-full bg-dark-800 border border-dark-500 rounded-xl pl-10 pr-4 py-2.5 text-bone appearance-none focus:outline-none focus:border-emerald-primary/50 focus:ring-1 focus:ring-emerald-primary/30 transition-colors"
+            className="w-full bg-dark-800 border border-dark-500 rounded-xl pl-10 pr-4 py-3 text-bone appearance-none focus:outline-none focus:border-emerald-primary/50 focus:ring-1 focus:ring-emerald-primary/30 transition-colors"
           >
             {corridors.map((c) => (
               <option key={c.value} value={c.value}>
@@ -129,26 +160,37 @@ export default function Simulator() {
             ))}
           </select>
         </div>
+        <p className="mt-2 text-xs text-ash italic">Montant maximal : 10 000 000 {selectedCorridor?.from || 'EUR'}</p>
       </div>
 
       {/* Amount */}
-      <div className="mb-5">
-        <Input
-          label="Montant a envoyer"
-          type="number"
-          min={1}
-          value={amount}
-          onChange={(e) => setAmount(Number(e.target.value))}
-          placeholder={`Montant en ${selectedCorridor?.from || 'EUR'}`}
-        />
-        <p className="mt-1 text-xs text-ash">
-          Devise: {selectedCorridor?.from}
-        </p>
+      <div className="mb-6">
+        <label className="block text-sm font-mono text-ash mb-1.5 uppercase tracking-wider">
+          J'envoie :
+        </label>
+        <div className="flex">
+          <input
+            type="number"
+            min={1}
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+            placeholder={`Montant sans frais`}
+            className="w-full bg-dark-800 border border-dark-500 border-r-0 rounded-l-xl px-4 py-3 text-bone placeholder:text-ash/50 focus:outline-none focus:border-emerald-primary/50 focus:ring-1 focus:ring-emerald-primary/30 transition-colors"
+          />
+          <div className="flex items-center justify-center bg-dark-600 border border-dark-500 rounded-r-xl px-4 text-bone font-mono">
+            {selectedCorridor?.from || 'EUR'}
+          </div>
+        </div>
+        {result && (
+          <p className="mt-2 text-xs text-ash italic">
+            Montant des frais : {Number(result.adoroFee).toLocaleString('fr-FR')} {result.currencySent}
+          </p>
+        )}
       </div>
 
       {/* Airtel fee checkbox (Africa corridors only) */}
       {showAirtel && (
-        <div className="mb-5">
+        <div className="mb-6">
           <label className="flex items-center gap-3 cursor-pointer group">
             <div className="relative">
               <input
@@ -166,80 +208,106 @@ export default function Simulator() {
               </div>
             </div>
             <span className="text-sm text-ash group-hover:text-bone transition-colors">
-              Inclure frais retrait Airtel Money (3%, max 5 000 FCFA)
+              Inclure frais de retrait Airtel Money
             </span>
           </label>
         </div>
       )}
 
-      {/* Beneficiary */}
-      <div className="mb-5 space-y-3">
-        <Input
-          label="Nom du beneficiaire"
-          value={beneficiaryName}
-          onChange={(e) => setBeneficiaryName(e.target.value)}
-          placeholder="Nom complet"
-          icon={<User size={16} />}
-        />
-        {needsPhone && (
-          <Input
-            label="Telephone beneficiaire"
-            value={beneficiaryPhone}
-            onChange={(e) => setBeneficiaryPhone(e.target.value)}
-            placeholder="+241 XX XX XX XX"
-            icon={<Phone size={16} />}
+      {/* Total to send */}
+      <div className="mb-6">
+        <label className="block text-sm font-mono text-ash mb-1.5 uppercase tracking-wider">
+          Total a envoyer a Adoro :
+        </label>
+        <div className="flex">
+          <input
+            type="text"
+            value={result ? Number(result.totalToSend).toLocaleString('fr-FR') : ''}
+            disabled
+            placeholder="Montant TTC"
+            className="w-full bg-dark-900 border border-dark-500 border-r-0 rounded-l-xl px-4 py-3 text-emerald-primary font-bold focus:outline-none disabled:opacity-80"
           />
-        )}
-        {needsEmail && (
-          <Input
-            label="Email beneficiaire"
-            value={beneficiaryEmail}
-            onChange={(e) => setBeneficiaryEmail(e.target.value)}
-            placeholder="email@example.com"
-            icon={<Mail size={16} />}
+          <div className="flex items-center justify-center bg-dark-700 border border-dark-500 rounded-r-xl px-4 text-emerald-primary font-mono font-bold">
+            {selectedCorridor?.from || 'EUR'}
+          </div>
+        </div>
+      </div>
+
+      {/* Amount received */}
+      <div className="mb-6">
+        <label className="block text-sm font-mono text-ash mb-1.5 uppercase tracking-wider">
+          Le beneficiaire recevra :
+        </label>
+        <div className="flex">
+          <input
+            type="text"
+            value={result ? Number(result.amountReceived).toLocaleString('fr-FR') : ''}
+            disabled
+            placeholder="Montant recu"
+            className="w-full bg-dark-900 border border-dark-500 border-r-0 rounded-l-xl px-4 py-3 text-emerald-light font-bold focus:outline-none disabled:opacity-80"
           />
+          <div className="flex items-center justify-center bg-dark-700 border border-dark-500 rounded-r-xl px-4 text-emerald-light font-mono font-bold">
+            {selectedCorridor?.to || 'XAF'}
+          </div>
+        </div>
+        {result && (
+          <p className="mt-2 text-xs text-ash italic">
+            Taux de change : 1 {result.currencySent} = {Number(result.rate).toLocaleString('fr-FR')} {result.currencyReceived}
+          </p>
         )}
       </div>
 
-      {/* Results */}
-      {result && (
-        <div className="mb-6 p-4 rounded-xl bg-dark-800/80 border border-emerald-primary/10 space-y-2">
-          <h3 className="font-mono text-xs uppercase tracking-wider text-emerald-primary mb-3">
-            Resultat de la simulation
-          </h3>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <span className="text-ash">Montant envoye:</span>
-            <span className="text-bone text-right font-mono">
-              {Number(result.amountSent).toLocaleString('fr-FR')} {result.currencySent}
-            </span>
-            <span className="text-ash">Frais Adoro:</span>
-            <span className="text-bone text-right font-mono">
-              {Number(result.adoroFee).toLocaleString('fr-FR')} {result.currencySent}
-            </span>
-            {Number(result.airtelFee) > 0 && (
-              <>
-                <span className="text-ash">Frais Airtel:</span>
-                <span className="text-bone text-right font-mono">
-                  {Number(result.airtelFee).toLocaleString('fr-FR')} {result.currencyReceived}
-                </span>
-              </>
-            )}
-            <span className="text-ash">Total a envoyer:</span>
-            <span className="text-emerald-primary text-right font-mono font-bold">
-              {Number(result.totalToSend).toLocaleString('fr-FR')} {result.currencySent}
-            </span>
-            <div className="col-span-2 border-t border-dark-600 my-1" />
-            <span className="text-ash">Beneficiaire recoit:</span>
-            <span className="text-emerald-light text-right font-mono font-bold text-lg">
-              {Number(result.amountReceived).toLocaleString('fr-FR')} {result.currencyReceived}
-            </span>
-            <span className="text-ash">Taux:</span>
-            <span className="text-bone text-right font-mono text-xs">
-              1 {result.currencySent} = {Number(result.rate).toLocaleString('fr-FR')} {result.currencyReceived}
-            </span>
+      {/* Beneficiary */}
+      <div className="mb-8 space-y-4">
+        <div className="w-full">
+          <label className="block text-sm font-mono text-ash mb-1.5 uppercase tracking-wider">Nom du beneficiaire :</label>
+          <div className="relative">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-ash">
+              <User size={16} />
+            </div>
+            <input 
+              className="w-full bg-dark-800 border border-dark-500 rounded-xl px-4 py-3 text-bone placeholder:text-ash/50 focus:outline-none focus:border-emerald-primary/50 focus:ring-1 focus:ring-emerald-primary/30 transition-colors pl-10" 
+              placeholder="Nom complet" 
+              value={beneficiaryName}
+              onChange={(e) => setBeneficiaryName(e.target.value)}
+            />
           </div>
         </div>
-      )}
+        
+        {needsPhone && (
+          <div className="w-full">
+            <label className="block text-sm font-mono text-ash mb-1.5 uppercase tracking-wider"><mark className="bg-emerald-primary/20 text-emerald-primary font-bold px-1 rounded">Telephone</mark> du beneficiaire :</label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-ash">
+                <Phone size={16} />
+              </div>
+              <input 
+                className="w-full bg-dark-800 border border-dark-500 rounded-xl px-4 py-3 text-bone placeholder:text-ash/50 focus:outline-none focus:border-emerald-primary/50 focus:ring-1 focus:ring-emerald-primary/30 transition-colors pl-10" 
+                placeholder="+241 XX XX XX XX" 
+                value={beneficiaryPhone}
+                onChange={(e) => setBeneficiaryPhone(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+        
+        {needsEmail && (
+          <div className="w-full">
+            <label className="block text-sm font-mono text-ash mb-1.5 uppercase tracking-wider"><mark className="bg-emerald-primary/20 text-emerald-primary font-bold px-1 rounded">Adresse e-mail</mark> du beneficiaire :</label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-ash">
+                <Mail size={16} />
+              </div>
+              <input 
+                className="w-full bg-dark-800 border border-dark-500 rounded-xl px-4 py-3 text-bone placeholder:text-ash/50 focus:outline-none focus:border-emerald-primary/50 focus:ring-1 focus:ring-emerald-primary/30 transition-colors pl-10" 
+                placeholder="email@example.com" 
+                value={beneficiaryEmail}
+                onChange={(e) => setBeneficiaryEmail(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Submit */}
       <Button
@@ -247,14 +315,14 @@ export default function Simulator() {
         disabled={!result || !beneficiaryName}
         loading={sending}
         size="lg"
-        className="w-full"
+        className="w-full py-4 text-lg"
       >
-        <MessageCircle size={18} className="mr-2" />
-        Envoyer via WhatsApp
+        <MessageCircle size={20} className="mr-2" />
+        Continuer sur WhatsApp
       </Button>
 
-      <p className="mt-3 text-center text-xs text-ash/60">
-        Aucun transfert reel. Vous serez redirige vers WhatsApp. Un email sera aussi envoye a notre equipe.
+      <p className="mt-4 text-center text-sm text-ash italic">
+        En appuyant sur ce bouton, vous serez redirige sur WhatsApp pour finaliser la transaction.
       </p>
     </div>
   );

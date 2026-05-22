@@ -37,29 +37,18 @@ export default function DashboardPage() {
     const fetchDashboard = async () => {
       try {
         const [kpisRes, ratesRes, statusRes] = await Promise.all([
-          api.get('/admin/kpis/'),
-          api.get('/admin/rates/history/?days=7'),
-          api.get('/admin/api-status/'),
+          api.get('/kpis/'),
+          api.get('/rates/history/?days=7'),
+          api.get('/api-status/'),
         ]);
         setKpis(kpisRes.data);
-        setRateHistory(ratesRes.data);
+        setRateHistory(ratesRes.data.results || ratesRes.data);
         setApiStatus(statusRes.data);
       } catch {
-        // Use fallback data
-        setKpis({ simulations24h: 42, simulations7j: 287, simulations30j: 1203, totalTransactions: 856 });
-        setRateHistory([
-          { date: '2026-05-14', EUR_XAF: 655.96, EUR_XOF: 655.96, EUR_MAD: 10.85 },
-          { date: '2026-05-15', EUR_XAF: 655.96, EUR_XOF: 655.96, EUR_MAD: 10.82 },
-          { date: '2026-05-16', EUR_XAF: 655.96, EUR_XOF: 655.96, EUR_MAD: 10.88 },
-          { date: '2026-05-17', EUR_XAF: 655.96, EUR_XOF: 655.96, EUR_MAD: 10.90 },
-          { date: '2026-05-18', EUR_XAF: 655.96, EUR_XOF: 655.96, EUR_MAD: 10.87 },
-          { date: '2026-05-19', EUR_XAF: 655.96, EUR_XOF: 655.96, EUR_MAD: 10.84 },
-          { date: '2026-05-20', EUR_XAF: 655.96, EUR_XOF: 655.96, EUR_MAD: 10.86 },
-        ]);
-        setApiStatus([
-          { source: 'ECB', status: 'online', lastUpdate: '2026-05-20T10:00:00Z' },
-          { source: 'XE', status: 'online', lastUpdate: '2026-05-20T09:45:00Z' },
-        ]);
+        // Use fallback data for now if endpoints are missing
+        setKpis({ simulations24h: 0, simulations7j: 0, simulations30j: 0, totalTransactions: 0 });
+        setRateHistory([]);
+        setApiStatus([]);
       }
     };
     fetchDashboard();

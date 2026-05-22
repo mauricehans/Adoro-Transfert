@@ -10,13 +10,12 @@ class TransactionAdmin(admin.ModelAdmin):
         "corridor",
         "amount_sent",
         "amount_received",
-        "sender_name",
         "beneficiary_name",
         "status",
         "created_at",
     )
     list_filter = ("status", "corridor", "created_at")
-    search_fields = ("sender_name", "beneficiary_name", "sender_phone", "beneficiary_phone")
+    search_fields = ("beneficiary_name", "beneficiary_phone")
     readonly_fields = ("id", "created_at", "updated_at")
     ordering = ("-created_at",)
 

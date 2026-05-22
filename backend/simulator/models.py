@@ -23,7 +23,7 @@ class Transaction(models.Model):
     fees_adoro = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     fees_airtel = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_to_send = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    rate_used = models.DecimalField(max_digits=12, decimal_places=6)
+    rate_used = models.DecimalField(max_digits=12, decimal_places=6, default=0)
 
     # Beneficiary info
     beneficiary_name = models.CharField(max_length=200)

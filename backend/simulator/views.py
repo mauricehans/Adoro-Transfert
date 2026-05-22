@@ -9,11 +9,39 @@ from rest_framework.response import Response
 
 from notifications.tasks import send_notification_email
 from .models import Transaction
+from .calculator import recalculate
 from .serializers import (
     TransactionCreateSerializer,
     TransactionListSerializer,
     TransactionUpdateSerializer,
 )
+
+class TransactionCalculateView(APIView):
+    """
+    Public endpoint to calculate simulation in real-time.
+    Replaces WebSocket.
+    """
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "transactions"
+
+    def post(self, request):
+        payload = request.data
+        safe_payload = {
+            "corridor": str(payload.get("corridor", "FR_GA"))[:10],
+            "amount": payload.get("amount", 0),
+            "include_airtel_fee": bool(payload.get("include_airtel_fee", False)),
+        }
+        
+        try:
+            result = recalculate(safe_payload)
+        except Exception:
+            return Response(
+                {"error": "Erreur de calcul."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        return Response(result)
 
 
 class TransactionCreateView(generics.CreateAPIView):

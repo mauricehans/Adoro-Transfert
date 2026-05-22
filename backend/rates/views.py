@@ -43,8 +43,10 @@ class RatesRefreshView(APIView):
     permission_classes = [permissions.IsAdminUser]
 
     def post(self, request):
-        fetch_daily_rates.delay()
+        # On execute directement pour que le frontend ait une reponse immediate
+        # plutot que d'attendre la task Celery (utile pour l'UX d'actualisation)
+        result = fetch_daily_rates()
         return Response(
-            {"detail": "Rates refresh task queued."},
-            status=status.HTTP_202_ACCEPTED,
+            {"detail": "Rates refreshed.", "data": result},
+            status=status.HTTP_200_OK,
         )
