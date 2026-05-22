@@ -6,6 +6,7 @@ from datetime import timedelta
 from pathlib import Path
 import sys
 
+from celery.schedules import crontab
 from decouple import Csv, config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -14,6 +15,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY", default="django-insecure-dev-key-change-in-production")
 DEBUG = config("DEBUG", default=True, cast=bool)
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
+
+# Hardened HTTP headers (only enforced when DEBUG=False)
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = "DENY"
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+if not DEBUG:
+    SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=True, cast=bool)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Application definition
 INSTALLED_APPS = [
@@ -139,10 +154,16 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.ScopedRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "30/minute",
+        "anon": "60/minute",
+        "user": "300/minute",
         "transactions": "10/minute",
+        "rates": "60/minute",
+        "public_read": "120/minute",
+        "login": "5/minute",
     },
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 25,
@@ -189,10 +210,9 @@ CELERY_TIMEZONE = "UTC"
 CELERY_BEAT_SCHEDULE = {
     "fetch-daily-rates": {
         "task": "rates.tasks.fetch_daily_rates",
-        "schedule": {
-            "hour": 6,
-            "minute": 0,
-        },
+        # Tous les jours a 06:00 UTC (07:00 ou 08:00 a Paris selon DST,
+        # 07:00 a Libreville/Douala/Dakar toute l'annee)
+        "schedule": crontab(hour=6, minute=0),
     },
 }
 

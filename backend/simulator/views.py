@@ -37,7 +37,7 @@ class TransactionListView(generics.ListAPIView):
     """Admin endpoint to list all transactions with filtering."""
 
     serializer_class = TransactionListSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
 
     def get_queryset(self):
         queryset = Transaction.objects.all()
@@ -68,7 +68,7 @@ class TransactionUpdateView(generics.UpdateAPIView):
     """Admin endpoint to update transaction status/notes."""
 
     serializer_class = TransactionUpdateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
     queryset = Transaction.objects.all()
     http_method_names = ["patch"]
 
@@ -76,7 +76,7 @@ class TransactionUpdateView(generics.UpdateAPIView):
 class TransactionExportView(APIView):
     """Admin endpoint to export transactions as CSV."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
 
     def get(self, request):
         fmt = request.query_params.get("format", "csv")

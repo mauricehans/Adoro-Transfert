@@ -4,11 +4,13 @@ Computes fees, applies exchange rate, returns breakdown.
 Rate is fetched from the database (RatesHistory), with a static fallback.
 """
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 from tariffs.models import Settings
 
 
+# Hard fallback when no rate is available in BDD.
+# XAF/XOF are pegged to EUR (1 EUR = 655.957 FCFA, fixed).
 STATIC_RATES = {
     "XAF": Decimal("655.957"),
     "XOF": Decimal("655.957"),
@@ -68,13 +70,25 @@ def recalculate(state: dict) -> dict:
     """
     Recalculate a transfer simulation based on the current state.
     Rate is fetched from the database automatically based on the corridor.
+    Inputs are validated/coerced defensively (consumer is WS-facing).
     """
     corridor = state.get("corridor", "FR_GA")
-    amount = Decimal(str(state.get("amount", 0)))
+    if corridor not in CORRIDOR_CURRENCY_MAP:
+        corridor = "FR_GA"
 
-    include_airtel = state.get("include_airtel_fee", False)
-    if "includeAirtel" in state and "include_airtel_fee" not in state:
-        include_airtel = state.get("includeAirtel", False)
+    try:
+        amount = Decimal(str(state.get("amount", 0)))
+    except (InvalidOperation, TypeError, ValueError):
+        amount = Decimal("0")
+
+    if amount < 0:
+        amount = Decimal("0")
+    if amount > Decimal("10000000"):
+        amount = Decimal("10000000")
+
+    include_airtel = bool(
+        state.get("include_airtel_fee", state.get("includeAirtel", False))
+    )
 
     # Airtel only applies to Africa corridors, not Morocco
     if corridor not in AIRTEL_CORRIDORS:

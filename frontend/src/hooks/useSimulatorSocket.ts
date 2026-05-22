@@ -15,15 +15,17 @@ interface SimSyncPayload {
   rate: string;
 }
 
+// Backend pushes { date, source, rates: { XAF, XOF, MAD, USD, ... } }
 interface RatesUpdatePayload {
-  pair: string;
-  rate: number;
-  source: string;
+  date?: string;
+  source?: string;
+  rates: Record<string, number>;
 }
 
 type WSMessage =
   | { type: 'sim:sync'; payload: SimSyncPayload }
-  | { type: 'rates:update'; payload: RatesUpdatePayload };
+  | { type: 'rates:update'; payload: RatesUpdatePayload }
+  | { type: 'error'; payload: { code: string; detail: string } };
 
 const CORRIDOR_CURRENCY: Record<string, string> = {
   FR_GA: 'XAF',
@@ -42,23 +44,77 @@ const STATIC_RATES: Record<string, number> = {
   XAF: 655.957,
   XOF: 655.957,
   MAD: 10.9,
+  USD: 1.09,
 };
 
+// Local fee grids — mirror seed_settings.py, used ONLY for the offline
+// fallback display. The final stored values always come from the backend.
+const EUR_TARIFFS: Array<[number, number | null, number]> = [
+  [1, 50, 3],
+  [51, 100, 5],
+  [101, 200, 8],
+  [201, 350, 10],
+  [351, 500, 12],
+  [501, 750, 15],
+  [751, 1000, 18],
+  [1001, null, 22],
+];
+const FCFA_TARIFFS: Array<[number, number | null, number]> = [
+  [1000, 50000, 1000],
+  [50001, 100000, 2000],
+  [100001, 200000, 3000],
+  [200001, 350000, 4500],
+  [350001, 500000, 6000],
+  [500001, 750000, 8000],
+  [750001, 1000000, 10000],
+  [1000001, null, 12000],
+];
+const MAD_TARIFFS: Array<[number, number | null, number]> = [
+  [10, 500, 10],
+  [501, 1000, 20],
+  [1001, 2000, 35],
+  [2001, 5000, 50],
+  [5001, 10000, 80],
+  [10001, null, 120],
+];
+
+function lookupFee(
+  grid: Array<[number, number | null, number]>,
+  amount: number
+): number {
+  for (const [min, max, fee] of grid) {
+    if (amount >= min && (max === null || amount <= max)) return fee;
+  }
+  return 0;
+}
+
 let cachedRates: Record<string, number> | null = null;
+let cacheTimer: ReturnType<typeof setTimeout> | null = null;
+
+function setCachedRates(rates: Record<string, number>): void {
+  cachedRates = rates;
+  if (cacheTimer) clearTimeout(cacheTimer);
+  cacheTimer = setTimeout(() => {
+    cachedRates = null;
+  }, 60_000);
+}
 
 async function fetchLatestRates(): Promise<Record<string, number>> {
   if (cachedRates) return cachedRates;
   try {
     const { data } = await api.get('/rates/latest/');
-    if (data?.rates) {
-      cachedRates = data.rates;
-      setTimeout(() => { cachedRates = null; }, 60000);
+    if (data?.rates && typeof data.rates === 'object') {
+      setCachedRates(data.rates);
       return data.rates;
     }
   } catch {
     // fallback
   }
   return STATIC_RATES;
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
 }
 
 function computeLocally(
@@ -69,27 +125,54 @@ function computeLocally(
 ): SimulationResult {
   const isEurSource = corridor.startsWith('FR_');
   const targetCurrency = CORRIDOR_CURRENCY[corridor] || 'XAF';
-  const rate = rates[targetCurrency] || STATIC_RATES[targetCurrency] || 655.957;
+  const rate =
+    Number(rates[targetCurrency]) ||
+    STATIC_RATES[targetCurrency] ||
+    655.957;
+
   const currencySent = isEurSource ? 'EUR' : targetCurrency;
   const currencyReceived = isEurSource ? targetCurrency : 'EUR';
 
-  const amountReceived = isEurSource
-    ? Math.round(amount * rate * 100) / 100
-    : rate > 0 ? Math.round((amount / rate) * 100) / 100 : 0;
-
-  let airtelFee = 0;
-  if (includeAirtelFee && AIRTEL_CORRIDORS.has(corridor)) {
-    const localAmount = isEurSource ? amountReceived : amount;
-    airtelFee = Math.min(Math.round(localAmount * 0.03 * 100) / 100, 5000);
+  // Compute Adoro fee from the appropriate grid (matches the corridor's send currency)
+  let adoroFee = 0;
+  if (isEurSource) {
+    adoroFee = lookupFee(EUR_TARIFFS, amount);
+  } else if (targetCurrency === 'MAD') {
+    adoroFee = lookupFee(MAD_TARIFFS, amount);
+  } else {
+    adoroFee = lookupFee(FCFA_TARIFFS, amount);
   }
+
+  const amountReceived =
+    rate > 0
+      ? isEurSource
+        ? round2(amount * rate)
+        : round2(amount / rate)
+      : 0;
+
+  let airtelFeeTarget = 0;
+  let airtelFeeSource = 0;
+  if (includeAirtelFee && AIRTEL_CORRIDORS.has(corridor)) {
+    const xafAmount = isEurSource ? amountReceived : amount;
+    const calc = Math.min(round2(xafAmount * 0.03), 5000);
+    if (isEurSource) {
+      airtelFeeTarget = calc;
+      airtelFeeSource = rate > 0 ? round2(calc / rate) : 0;
+    } else {
+      airtelFeeSource = calc;
+      airtelFeeTarget = rate > 0 ? round2(calc / rate) : 0;
+    }
+  }
+
+  const totalToSend = round2(amount + adoroFee + airtelFeeSource);
 
   return {
     corridor,
     amountSent: amount,
     currencySent,
-    adoroFee: 0,
-    airtelFee,
-    totalToSend: amount,
+    adoroFee,
+    airtelFee: airtelFeeTarget,
+    totalToSend,
     amountReceived,
     currencyReceived,
     rate,
@@ -131,8 +214,19 @@ export function useSimulatorSocket() {
             rate: Number(p.rate),
           });
         } else if (msg.type === 'rates:update') {
-          cachedRates = null;
-          updateRate(msg.payload.pair, msg.payload.rate);
+          // Invalidate cache and store new rates so subsequent local
+          // computes use the latest values broadcast by Celery.
+          if (msg.payload?.rates && typeof msg.payload.rates === 'object') {
+            const numericRates: Record<string, number> = {};
+            for (const [k, v] of Object.entries(msg.payload.rates)) {
+              const n = Number(v);
+              if (!Number.isNaN(n)) numericRates[k] = n;
+            }
+            setCachedRates(numericRates);
+            for (const [ccy, rate] of Object.entries(numericRates)) {
+              updateRate(`EUR_${ccy}`, rate);
+            }
+          }
         }
       } catch {
         // ignore malformed messages
@@ -150,28 +244,20 @@ export function useSimulatorSocket() {
       if (readyState === ReadyState.OPEN) {
         sendJsonMessage({ type: 'sim:change', payload: data });
 
-        // Fallback: si pas de reponse WebSocket en 3s, calcul local avec taux BDD
+        // Si pas de reponse WS en 3s, calcul local correct (avec frais)
         pendingTimeout.current = setTimeout(async () => {
           const rates = await fetchLatestRates();
-          const result = computeLocally(
-            data.corridor,
-            data.amount,
-            data.include_airtel_fee,
-            rates
+          setResult(
+            computeLocally(data.corridor, data.amount, data.include_airtel_fee, rates)
           );
-          setResult(result);
         }, 3000);
       } else {
-        // WebSocket pas connecte: calcul local immediat avec taux BDD
+        // WS non connecte: calcul local immediat
         (async () => {
           const rates = await fetchLatestRates();
-          const result = computeLocally(
-            data.corridor,
-            data.amount,
-            data.include_airtel_fee,
-            rates
+          setResult(
+            computeLocally(data.corridor, data.amount, data.include_airtel_fee, rates)
           );
-          setResult(result);
         })();
       }
     },

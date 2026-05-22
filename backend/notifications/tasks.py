@@ -54,6 +54,11 @@ def send_notification_email(self, transaction_id: str):
         logger.error(f"Transaction {transaction_id} not found for notification.")
         return
 
+    # Idempotence: ne pas renvoyer un email deja envoye
+    if transaction.email_sent:
+        logger.info(f"Email already sent for transaction {transaction_id}, skipping.")
+        return
+
     contact = get_contact_settings()
     recipient_email = contact["email"]
 

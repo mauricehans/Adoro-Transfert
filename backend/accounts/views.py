@@ -1,5 +1,6 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -19,9 +20,11 @@ class IsSuperAdmin(permissions.BasePermission):
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
-    """JWT login accepting username OR email."""
+    """JWT login accepting username OR email. Rate-limited to 5/min/IP."""
 
     serializer_class = CustomTokenObtainPairSerializer
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "login"
 
 
 class CurrentUserView(generics.RetrieveAPIView):

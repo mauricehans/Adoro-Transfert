@@ -87,6 +87,14 @@ export const useRatesStore = create<RatesState>((set) => ({
     })),
 }));
 
+// Default sending amount per corridor (in the source currency)
+// — picks a sensible value within the first tariff tier so frais Adoro > 0
+const DEFAULT_AMOUNT_BY_CORRIDOR: Record<string, number> = {
+  FR_GA: 100, FR_CM: 100, FR_SN: 100, FR_MA: 100,
+  GA_FR: 50000, CM_FR: 50000, SN_FR: 50000,
+  MA_FR: 500,
+};
+
 export const useSimulationStore = create<SimulationState>((set) => ({
   corridor: 'FR_GA',
   amount: 100,
@@ -95,7 +103,13 @@ export const useSimulationStore = create<SimulationState>((set) => ({
   beneficiaryPhone: '',
   beneficiaryEmail: '',
   result: null,
-  setCorridor: (corridor) => set({ corridor }),
+  setCorridor: (corridor) =>
+    set((state) => ({
+      corridor,
+      // si l'utilisateur n'a pas saisi un montant pertinent pour la nouvelle
+      // devise (ex: 100 FCFA), on reinitialise a un default raisonnable.
+      amount: DEFAULT_AMOUNT_BY_CORRIDOR[corridor] ?? state.amount,
+    })),
   setAmount: (amount) => set({ amount }),
   setIncludeAirtelFee: (includeAirtelFee) => set({ includeAirtelFee }),
   setBeneficiaryName: (beneficiaryName) => set({ beneficiaryName }),

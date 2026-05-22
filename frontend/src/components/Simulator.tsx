@@ -57,26 +57,22 @@ export default function Simulator() {
   }, [corridor, amount, includeAirtelFee, sendSimulation]);
 
   const handleSubmit = async () => {
-    if (!result || !beneficiaryName) return;
+    if (!result || !beneficiaryName || amount <= 0) return;
     setSending(true);
     try {
-      // Sauvegarde en BDD + declenchement email automatique cote backend
+      // Le backend recalcule TOUTES les valeurs monetaires (frais, taux, total)
+      // a partir de corridor + amount_sent + include_airtel_fee.
+      // On n'envoie JAMAIS les montants/taux/frais cote client (securite).
       await api.post('/transactions/', {
         corridor,
-        amount_sent: result.amountSent,
-        currency_sent: result.currencySent,
-        adoro_fee: result.adoroFee,
-        airtel_fee: result.airtelFee,
-        total_to_send: result.totalToSend,
-        amount_received: result.amountReceived,
-        currency_received: result.currencyReceived,
-        rate: result.rate,
+        amount_sent: amount,
+        include_airtel_fee: includeAirtelFee,
         beneficiary_name: beneficiaryName,
         beneficiary_phone: beneficiaryPhone,
         beneficiary_email: beneficiaryEmail,
       });
     } catch {
-      // transaction save failed, proceed to WhatsApp anyway
+      // sauvegarde echouee, on continue quand meme vers WhatsApp
     }
 
     // Recuperation du numero et du template WhatsApp depuis la BDD
