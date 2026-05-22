@@ -6,7 +6,7 @@ class RatesHistory(models.Model):
 
     class Source(models.TextChoices):
         EXCHANGERATES_API = "exchangeratesapi.io", "exchangeratesapi.io"
-        FRANKFURTER = "frankfurter", "frankfurter.dev"
+        FRANKFURTER = "frankfurter", "frankfurter.app"
         STATIC = "static", "Static (fixed FCFA rate)"
 
     date = models.DateField()
