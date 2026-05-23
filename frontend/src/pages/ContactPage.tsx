@@ -3,9 +3,11 @@ import { MessageCircle, Mail, Phone, MapPin, Send } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import { useContactSettings } from '../hooks/useContactSettings';
+import { usePublicSettings } from '../hooks/usePublicSettings';
 
 export default function ContactPage() {
   const { whatsappNumber, notificationEmail } = useContactSettings();
+  const { address, hours } = usePublicSettings();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
@@ -146,7 +148,9 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-bone text-sm font-medium">Adresse</p>
-                      <p className="text-ash text-xs">Libreville, Gabon</p>
+                      <p className="text-ash text-xs">
+                        {address.full || `${address.city}, ${address.country}`}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -158,20 +162,20 @@ export default function ContactPage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-ash">Lundi - Vendredi</span>
-                    <span className="text-bone font-mono">08:00 - 20:00</span>
+                    <span className="text-bone font-mono">{hours.weekdays}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-ash">Samedi</span>
-                    <span className="text-bone font-mono">09:00 - 17:00</span>
+                    <span className="text-bone font-mono">{hours.saturday}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-ash">Dimanche</span>
-                    <span className="text-bone font-mono">Ferme</span>
+                    <span className="text-bone font-mono">{hours.sunday}</span>
                   </div>
                 </div>
-                <p className="mt-4 text-xs text-ash/60">
-                  Heures de Libreville (UTC+1). WhatsApp disponible 7j/7.
-                </p>
+                {hours.timezone && (
+                  <p className="mt-4 text-xs text-ash/60">{hours.timezone}</p>
+                )}
               </div>
             </div>
           </div>

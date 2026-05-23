@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Simulator from '../components/Simulator';
 import ProcessFlow from '../components/ProcessFlow';
 import CorridorCard from '../components/CorridorCard';
+import Testimonials from '../components/Testimonials';
 import Button from '../components/ui/Button';
 import { useContactSettings } from '../hooks/useContactSettings';
 
@@ -101,6 +102,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Testimonials (CCTP §3.1) */}
+      <Testimonials />
 
       {/* CTA */}
       <section className="py-20 bg-dark-800/50">

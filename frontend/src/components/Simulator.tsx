@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { ArrowRightLeft, MessageCircle, User, Phone, Mail, Activity } from 'lucide-react';
 import Button from './ui/Button';
-import Input from './ui/Input';
 import { useSimulationStore } from '../store';
 import { buildWhatsAppUrl, getWhatsAppNumber, getWhatsAppTemplate } from '../lib/whatsapp';
 import api from '../lib/api';
 import TransferDetails from './TransferDetails';
+import { usePublicSettings } from '../hooks/usePublicSettings';
 
 const corridors = [
   { value: 'FR_GA', label: 'France → Gabon (PayPal vers Airtel Money)', from: 'EUR', to: 'XAF' },
@@ -45,7 +45,10 @@ export default function Simulator() {
   const [sending, setSending] = useState(false);
   const [calculating, setCalculating] = useState(false);
 
+  const { amountLimits } = usePublicSettings();
   const selectedCorridor = corridors.find((c) => c.value === corridor);
+  const fromCurrency = selectedCorridor?.from || 'EUR';
+  const limits = amountLimits[fromCurrency] || { min: 1, max: 1000000 };
   
   const destination = corridor.split('_')[1];
   
@@ -215,7 +218,9 @@ export default function Simulator() {
             ))}
           </select>
         </div>
-        <p className="mt-2 text-xs text-ash italic">Montant maximal : 10 000 000 {selectedCorridor?.from || 'EUR'}</p>
+        <p className="mt-2 text-xs text-ash italic">
+          Montant accepté : {limits.min.toLocaleString('fr-FR')} - {limits.max.toLocaleString('fr-FR')} {fromCurrency}
+        </p>
       </div>
 
       {/* Amount */}

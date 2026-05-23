@@ -157,22 +157,34 @@ DEFAULT_SETTINGS = [
     },
     {
         "key": "whatsapp_template",
+        "value": {"template": ""},
+        "description": (
+            "Template WhatsApp global (optionnel). Laisser vide pour utiliser "
+            "les templates specifiques par corridor cotes frontend (CCTP §2.2 à §2.7). "
+            "Si renseigne, ce template ecrase les templates corridor."
+        ),
+        "is_public": True,
+    },
+    # ANNEXE : adresse et horaires (CCTP §3.5)
+    {
+        "key": "business_address",
         "value": {
-            "template": (
-                "Bonjour, je souhaite effectuer un transfert via Adoro Transfert.\n\n"
-                "--- Details de la simulation ---\n"
-                "Corridor: {corridor}\n"
-                "Montant envoye: {amount_sent} {currency_sent}\n"
-                "Frais Adoro: {adoro_fee} {currency_sent}\n"
-                "Total a envoyer: {total_to_send} {currency_sent}\n"
-                "Beneficiaire recoit: {amount_received} {currency_received}\n"
-                "Taux applique: {rate}\n\n"
-                "--- Beneficiaire ---\n"
-                "Nom: {beneficiary_name}\n"
-                "Telephone: {beneficiary_phone}\n"
-            )
+            "city": "Libreville",
+            "country": "Gabon",
+            "full": "Libreville, Gabon",
         },
-        "description": "Template du message WhatsApp pre-rempli envoye par le client",
+        "description": "Adresse affichee sur la page Contact. Editable depuis l'admin.",
+        "is_public": True,
+    },
+    {
+        "key": "business_hours",
+        "value": {
+            "weekdays": "08:00 - 20:00",
+            "saturday": "09:00 - 17:00",
+            "sunday": "Ferme",
+            "timezone": "Heures de Libreville (UTC+1). WhatsApp disponible 7j/7.",
+        },
+        "description": "Horaires d'ouverture affiches sur la page Contact. Editable depuis l'admin.",
         "is_public": True,
     },
     {

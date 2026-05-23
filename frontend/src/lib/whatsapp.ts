@@ -1,5 +1,6 @@
 import { SimulationResult } from '../store';
 import api from './api';
+import { getCorridorTemplate } from './whatsappTemplates';
 
 let cachedWhatsAppNumber: string | null = null;
 let cachedTemplate: string | null = null;
@@ -24,8 +25,10 @@ export async function getWhatsAppTemplate(): Promise<string | null> {
   try {
     const { data } = await api.get('/settings/public/');
     const setting = data.find((s: { key: string; value: any }) => s.key === 'whatsapp_template');
-    if (setting?.value?.template) {
-      cachedTemplate = setting.value.template;
+    const tpl = setting?.value?.template;
+    // Si vide => null, pour laisser la priorité au template corridor
+    if (tpl && tpl.trim().length > 0) {
+      cachedTemplate = tpl;
       return cachedTemplate;
     }
   } catch {
@@ -117,8 +120,18 @@ function buildDefault(data: WhatsAppData): string {
 }
 
 export function buildWhatsAppUrl(data: WhatsAppData): string {
-  const { whatsappNumber, template } = data;
-  const message = template ? buildFromTemplate(template, data) : buildDefault(data);
+  const { whatsappNumber, template, result } = data;
+
+  // Priorité :
+  // 1. Template BDD admin (si configuré via Settings)
+  // 2. Template spécifique au corridor (CCTP §2.2 à §2.7)
+  // 3. Template générique de secours
+  const corridorTemplate = getCorridorTemplate(result.corridor);
+  const finalTemplate = template || corridorTemplate;
+
+  const message = finalTemplate
+    ? buildFromTemplate(finalTemplate, data)
+    : buildDefault(data);
   const encoded = encodeURIComponent(message);
   return `https://wa.me/${whatsappNumber}?text=${encoded}`;
 }
