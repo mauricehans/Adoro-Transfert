@@ -15,6 +15,7 @@ from rest_framework import serializers
 from .calculator import (
     AIRTEL_CORRIDORS,
     CORRIDOR_CURRENCIES,
+    get_amount_limits,
     recalculate,
 )
 from .models import Transaction
@@ -88,6 +89,24 @@ class TransactionCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Montant trop eleve.")
         return value
 
+    def _check_limits(self, attrs):
+        """Verifie que le montant respecte les bornes definies par devise."""
+        corridor = attrs.get("corridor")
+        amount = attrs.get("amount_sent")
+        if not corridor or amount is None:
+            return
+        currency_sent = CORRIDOR_CURRENCIES.get(corridor, {}).get("src", "EUR")
+        mn, mx = get_amount_limits(currency_sent)
+        amount_dec = Decimal(str(amount))
+        if amount_dec < mn:
+            raise serializers.ValidationError(
+                {"amount_sent": f"Montant minimum : {mn} {currency_sent}."}
+            )
+        if amount_dec > mx:
+            raise serializers.ValidationError(
+                {"amount_sent": f"Montant maximum : {mx} {currency_sent}."}
+            )
+
     def validate_beneficiary_name(self, value):
         v = (value or "").strip()
         if len(v) < 2:
@@ -105,6 +124,8 @@ class TransactionCreateSerializer(serializers.ModelSerializer):
         return v
 
     def validate(self, attrs):
+        self._check_limits(attrs)
+
         corridor = attrs.get("corridor")
         phone = attrs.get("beneficiary_phone", "")
         email = attrs.get("beneficiary_email", "")
