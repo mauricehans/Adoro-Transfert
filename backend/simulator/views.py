@@ -92,13 +92,13 @@ class TransactionListView(generics.ListAPIView):
         return queryset
 
 
-class TransactionUpdateView(generics.UpdateAPIView):
-    """Admin endpoint to update transaction status/notes."""
+class TransactionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Admin endpoint to retrieve, update or delete a transaction."""
 
     serializer_class = TransactionUpdateSerializer
     permission_classes = [permissions.IsAdminUser]
     queryset = Transaction.objects.all()
-    http_method_names = ["patch"]
+    http_method_names = ["get", "patch", "delete"]
 
 
 class TransactionExportView(APIView):

@@ -17,6 +17,7 @@ interface Settings {
   apiUrls: { name: string; url: string }[];
   fcfaTariffs: TariffRow[];
   eurTariffs: TariffRow[];
+  madTariffs: TariffRow[];
   whatsappTemplate: string;
 }
 
@@ -49,6 +50,14 @@ export default function SettingsPage() {
       { min: 751, max: 1000, fee: 18 },
       { min: 1001, max: null, fee: 22 },
     ],
+    madTariffs: [
+      { min: 10, max: 500, fee: 10 },
+      { min: 501, max: 1000, fee: 20 },
+      { min: 1001, max: 2000, fee: 35 },
+      { min: 2001, max: 5000, fee: 50 },
+      { min: 5001, max: 10000, fee: 80 },
+      { min: 10001, max: null, fee: 120 },
+    ],
     whatsappTemplate:
       'Bonjour, je souhaite effectuer un transfert.\n\nCorridor: {corridor}\nMontant: {amount} {currency}\nBeneficiaire: {beneficiary}',
   });
@@ -72,6 +81,7 @@ export default function SettingsPage() {
           whatsappTemplate: map.whatsapp_template?.template || prev.whatsappTemplate,
           fcfaTariffs: map.fcfa_tariffs?.tariffs || prev.fcfaTariffs,
           eurTariffs: map.eur_tariffs?.tariffs || prev.eurTariffs,
+          madTariffs: map.mad_tariffs?.tariffs || prev.madTariffs,
           apiUrls: map.api_urls?.urls || prev.apiUrls,
         }));
       } catch {
@@ -103,6 +113,9 @@ export default function SettingsPage() {
         api.patch('/settings/eur_tariffs/', {
           value: { tariffs: settings.eurTariffs },
         }),
+        api.patch('/settings/mad_tariffs/', {
+          value: { tariffs: settings.madTariffs },
+        }),
         api.patch('/settings/api_urls/', {
           value: { urls: settings.apiUrls },
         }),
@@ -116,21 +129,21 @@ export default function SettingsPage() {
     }
   };
 
-  const updateTariff = (type: 'fcfaTariffs' | 'eurTariffs', index: number, field: keyof TariffRow, value: number | null) => {
+  const updateTariff = (type: 'fcfaTariffs' | 'eurTariffs' | 'madTariffs', index: number, field: keyof TariffRow, value: number | null) => {
     setSettings((prev) => ({
       ...prev,
       [type]: prev[type].map((row, i) => (i === index ? { ...row, [field]: value } : row)),
     }));
   };
 
-  const addTariff = (type: 'fcfaTariffs' | 'eurTariffs') => {
+  const addTariff = (type: 'fcfaTariffs' | 'eurTariffs' | 'madTariffs') => {
     setSettings((prev) => ({
       ...prev,
       [type]: [...prev[type], { min: 0, max: null, fee: 0 }],
     }));
   };
 
-  const removeTariff = (type: 'fcfaTariffs' | 'eurTariffs', index: number) => {
+  const removeTariff = (type: 'fcfaTariffs' | 'eurTariffs' | 'madTariffs', index: number) => {
     setSettings((prev) => ({
       ...prev,
       [type]: prev[type].filter((_, i) => i !== index),
@@ -377,6 +390,53 @@ export default function SettingsPage() {
                 />
                 <button
                   onClick={() => removeTariff('eurTariffs', i)}
+                  className="p-2 text-ash hover:text-red-400 transition-colors justify-self-center"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* MAD Tariffs */}
+        <div className="glass-card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display text-xl text-bone">GRILLE TARIFAIRE MAD (Maroc)</h2>
+            <Button onClick={() => addTariff('madTariffs')} variant="secondary" size="sm">
+              <Plus size={14} className="mr-1" />
+              Ligne
+            </Button>
+          </div>
+          <div className="space-y-2">
+            <div className="grid grid-cols-4 gap-3 text-xs font-mono text-ash uppercase mb-1 px-1">
+              <span>Min (MAD)</span>
+              <span>Max (MAD)</span>
+              <span>Frais (MAD)</span>
+              <span></span>
+            </div>
+            {settings.madTariffs.map((row, i) => (
+              <div key={i} className="grid grid-cols-4 gap-3 items-center">
+                <input
+                  type="number"
+                  value={row.min}
+                  onChange={(e) => updateTariff('madTariffs', i, 'min', Number(e.target.value))}
+                  className="bg-dark-800 border border-dark-500 rounded-lg px-3 py-1.5 text-sm text-bone focus:outline-none focus:border-emerald-primary/50"
+                />
+                <input
+                  type="number"
+                  value={row.max ?? ''}
+                  onChange={(e) => updateTariff('madTariffs', i, 'max', e.target.value ? Number(e.target.value) : null)}
+                  placeholder="Illimite"
+                  className="bg-dark-800 border border-dark-500 rounded-lg px-3 py-1.5 text-sm text-bone placeholder:text-ash/50 focus:outline-none focus:border-emerald-primary/50"
+                />
+                <input
+                  type="number"
+                  value={row.fee}
+                  onChange={(e) => updateTariff('madTariffs', i, 'fee', Number(e.target.value))}
+                  className="bg-dark-800 border border-dark-500 rounded-lg px-3 py-1.5 text-sm text-bone focus:outline-none focus:border-emerald-primary/50"
+                />
+                <button
+                  onClick={() => removeTariff('madTariffs', i)}
                   className="p-2 text-ash hover:text-red-400 transition-colors justify-self-center"
                 >
                   <Trash2 size={14} />

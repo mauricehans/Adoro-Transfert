@@ -5,16 +5,23 @@ import Input from './ui/Input';
 import { useSimulationStore } from '../store';
 import { buildWhatsAppUrl, getWhatsAppNumber, getWhatsAppTemplate } from '../lib/whatsapp';
 import api from '../lib/api';
+import TransferDetails from './TransferDetails';
 
 const corridors = [
-  { value: 'FR_GA', label: 'France → Gabon', from: 'EUR', to: 'XAF' },
-  { value: 'GA_FR', label: 'Gabon → France', from: 'XAF', to: 'EUR' },
-  { value: 'FR_CM', label: 'France → Cameroun', from: 'EUR', to: 'XAF' },
-  { value: 'CM_FR', label: 'Cameroun → France', from: 'XAF', to: 'EUR' },
-  { value: 'FR_SN', label: 'France → Senegal', from: 'EUR', to: 'XOF' },
-  { value: 'SN_FR', label: 'Senegal → France', from: 'XOF', to: 'EUR' },
-  { value: 'FR_MA', label: 'France → Maroc', from: 'EUR', to: 'MAD' },
-  { value: 'MA_FR', label: 'Maroc → France', from: 'MAD', to: 'EUR' },
+  { value: 'FR_GA', label: 'France → Gabon (PayPal vers Airtel Money)', from: 'EUR', to: 'XAF' },
+  { value: 'GA_FR', label: 'Gabon → France (Airtel Money vers PayPal)', from: 'XAF', to: 'EUR' },
+  { value: 'FR_CM', label: 'France → Cameroun (PayPal vers Mobile Money)', from: 'EUR', to: 'XAF' },
+  { value: 'CM_FR', label: 'Cameroun → France (Mobile Money vers PayPal)', from: 'XAF', to: 'EUR' },
+  { value: 'FR_SN', label: 'France → Sénégal (PayPal vers Wave)', from: 'EUR', to: 'XOF' },
+  { value: 'SN_FR', label: 'Sénégal → France (Wave vers PayPal)', from: 'XOF', to: 'EUR' },
+  { value: 'FR_MA', label: 'France → Maroc (PayPal vers Wafacash)', from: 'EUR', to: 'MAD' },
+  { value: 'MA_FR', label: 'Maroc → France (Wafacash vers PayPal)', from: 'MAD', to: 'EUR' },
+  { value: 'SN_GA', label: 'Sénégal → Gabon (Wave vers Airtel Money)', from: 'XOF', to: 'XAF' },
+  { value: 'GA_SN', label: 'Gabon → Sénégal (Airtel Money vers Wave)', from: 'XAF', to: 'XOF' },
+  { value: 'MA_GA', label: 'Maroc → Gabon (Wafacash vers Airtel Money)', from: 'MAD', to: 'XAF' },
+  { value: 'GA_MA', label: 'Gabon → Maroc (Airtel Money vers Wafacash)', from: 'XAF', to: 'MAD' },
+  { value: 'SN_MA', label: 'Sénégal → Maroc (Wave vers Wafacash)', from: 'XOF', to: 'MAD' },
+  { value: 'MA_SN', label: 'Maroc → Sénégal (Wafacash vers Wave)', from: 'MAD', to: 'XOF' },
 ];
 
 export default function Simulator() {
@@ -39,9 +46,57 @@ export default function Simulator() {
   const [calculating, setCalculating] = useState(false);
 
   const selectedCorridor = corridors.find((c) => c.value === corridor);
-  const needsPhone = ['FR_GA', 'FR_CM', 'FR_SN', 'GA_FR', 'CM_FR', 'SN_FR'].includes(corridor);
-  const needsEmail = ['FR_MA', 'MA_FR'].includes(corridor);
-  const showAirtel = ['FR_GA', 'FR_CM', 'FR_SN', 'GA_FR', 'CM_FR', 'SN_FR'].includes(corridor);
+  
+  const destination = corridor.split('_')[1];
+  
+  let needsPhone = false;
+  let needsEmail = false;
+  let phoneLabel = "Téléphone du bénéficiaire";
+  let phonePlaceholder = "+241 XX XX XX XX";
+  let emailLabel = "Adresse e-mail du bénéficiaire";
+  let emailPlaceholder = "email@example.com";
+  let nameLabel = "Nom du bénéficiaire :";
+  let namePlaceholder = "Nom complet";
+
+  switch (destination) {
+    case 'FR':
+      needsEmail = true;
+      emailLabel = "Adresse e-mail PayPal du bénéficiaire";
+      emailPlaceholder = "compte@paypal.com";
+      break;
+    case 'GA':
+      needsPhone = true;
+      phoneLabel = "Numéro Airtel Money du bénéficiaire";
+      phonePlaceholder = "+241 07 XX XX XX";
+      break;
+    case 'SN':
+      needsPhone = true;
+      phoneLabel = "Numéro Wave du bénéficiaire";
+      phonePlaceholder = "+221 XX XXX XX XX";
+      break;
+    case 'CM':
+      needsPhone = true;
+      phoneLabel = "Numéro MTN MoMo du bénéficiaire";
+      phonePlaceholder = "+237 6X XX XX XX";
+      break;
+    case 'MA':
+      needsPhone = true;
+      phoneLabel = "Téléphone du bénéficiaire (Wafacash)";
+      phonePlaceholder = "+212 6 XX XX XX XX";
+      nameLabel = "Nom complet (tel que sur la pièce d'identité) :";
+      break;
+  }
+
+  // Airtel Money s'applique UNIQUEMENT quand l'argent arrive au Gabon
+  const showAirtel = ['FR_GA', 'SN_GA', 'MA_GA'].includes(corridor);
+
+  const isFormValid = () => {
+    if (!result || amount <= 0) return false;
+    if (!beneficiaryName.trim()) return false;
+    if (needsPhone && !beneficiaryPhone.trim()) return false;
+    if (needsEmail && !beneficiaryEmail.trim()) return false;
+    return true;
+  };
 
   useEffect(() => {
     const calculateSimulation = async () => {
@@ -260,14 +315,14 @@ export default function Simulator() {
       {/* Beneficiary */}
       <div className="mb-8 space-y-4">
         <div className="w-full">
-          <label className="block text-sm font-mono text-ash mb-1.5 uppercase tracking-wider">Nom du beneficiaire :</label>
+          <label className="block text-sm font-mono text-ash mb-1.5 uppercase tracking-wider">{nameLabel}</label>
           <div className="relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-ash">
               <User size={16} />
             </div>
             <input 
               className="w-full bg-dark-800 border border-dark-500 rounded-xl px-4 py-3 text-bone placeholder:text-ash/50 focus:outline-none focus:border-emerald-primary/50 focus:ring-1 focus:ring-emerald-primary/30 transition-colors pl-10" 
-              placeholder="Nom complet" 
+              placeholder={namePlaceholder}
               value={beneficiaryName}
               onChange={(e) => setBeneficiaryName(e.target.value)}
             />
@@ -276,14 +331,16 @@ export default function Simulator() {
         
         {needsPhone && (
           <div className="w-full">
-            <label className="block text-sm font-mono text-ash mb-1.5 uppercase tracking-wider"><mark className="bg-emerald-primary/20 text-emerald-primary font-bold px-1 rounded">Telephone</mark> du beneficiaire :</label>
+            <label className="block text-sm font-mono text-ash mb-1.5 uppercase tracking-wider">
+              <mark className="bg-emerald-primary/20 text-emerald-primary font-bold px-1 rounded">{phoneLabel.split(' ')[0]}</mark> {phoneLabel.substring(phoneLabel.indexOf(' ') + 1)} :
+            </label>
             <div className="relative">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-ash">
                 <Phone size={16} />
               </div>
               <input 
                 className="w-full bg-dark-800 border border-dark-500 rounded-xl px-4 py-3 text-bone placeholder:text-ash/50 focus:outline-none focus:border-emerald-primary/50 focus:ring-1 focus:ring-emerald-primary/30 transition-colors pl-10" 
-                placeholder="+241 XX XX XX XX" 
+                placeholder={phonePlaceholder}
                 value={beneficiaryPhone}
                 onChange={(e) => setBeneficiaryPhone(e.target.value)}
               />
@@ -293,14 +350,16 @@ export default function Simulator() {
         
         {needsEmail && (
           <div className="w-full">
-            <label className="block text-sm font-mono text-ash mb-1.5 uppercase tracking-wider"><mark className="bg-emerald-primary/20 text-emerald-primary font-bold px-1 rounded">Adresse e-mail</mark> du beneficiaire :</label>
+            <label className="block text-sm font-mono text-ash mb-1.5 uppercase tracking-wider">
+              <mark className="bg-emerald-primary/20 text-emerald-primary font-bold px-1 rounded">{emailLabel.split(' ')[0]}</mark> {emailLabel.substring(emailLabel.indexOf(' ') + 1)} :
+            </label>
             <div className="relative">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-ash">
                 <Mail size={16} />
               </div>
               <input 
                 className="w-full bg-dark-800 border border-dark-500 rounded-xl px-4 py-3 text-bone placeholder:text-ash/50 focus:outline-none focus:border-emerald-primary/50 focus:ring-1 focus:ring-emerald-primary/30 transition-colors pl-10" 
-                placeholder="email@example.com" 
+                placeholder={emailPlaceholder}
                 value={beneficiaryEmail}
                 onChange={(e) => setBeneficiaryEmail(e.target.value)}
               />
@@ -312,7 +371,7 @@ export default function Simulator() {
       {/* Submit */}
       <Button
         onClick={handleSubmit}
-        disabled={!result || !beneficiaryName}
+        disabled={!isFormValid()}
         loading={sending}
         size="lg"
         className="w-full py-4 text-lg"
@@ -324,6 +383,8 @@ export default function Simulator() {
       <p className="mt-4 text-center text-sm text-ash italic">
         En appuyant sur ce bouton, vous serez redirige sur WhatsApp pour finaliser la transaction.
       </p>
+
+      <TransferDetails corridor={corridor} />
     </div>
   );
 }

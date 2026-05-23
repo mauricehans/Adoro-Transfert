@@ -18,19 +18,26 @@ STATIC_RATES = {
     "USD": Decimal("1.09"),
 }
 
-CORRIDOR_CURRENCY_MAP = {
-    "FR_GA": "XAF",
-    "GA_FR": "XAF",
-    "FR_CM": "XAF",
-    "CM_FR": "XAF",
-    "FR_SN": "XOF",
-    "SN_FR": "XOF",
-    "FR_MA": "MAD",
-    "MA_FR": "MAD",
+CORRIDOR_CURRENCIES = {
+    "FR_GA": {"src": "EUR", "tgt": "XAF"},
+    "GA_FR": {"src": "XAF", "tgt": "EUR"},
+    "FR_CM": {"src": "EUR", "tgt": "XAF"},
+    "CM_FR": {"src": "XAF", "tgt": "EUR"},
+    "FR_SN": {"src": "EUR", "tgt": "XOF"},
+    "SN_FR": {"src": "XOF", "tgt": "EUR"},
+    "FR_MA": {"src": "EUR", "tgt": "MAD"},
+    "MA_FR": {"src": "MAD", "tgt": "EUR"},
+    "SN_GA": {"src": "XOF", "tgt": "XAF"},
+    "GA_SN": {"src": "XAF", "tgt": "XOF"},
+    "MA_GA": {"src": "MAD", "tgt": "XAF"},
+    "GA_MA": {"src": "XAF", "tgt": "MAD"},
+    "SN_MA": {"src": "XOF", "tgt": "MAD"},
+    "MA_SN": {"src": "MAD", "tgt": "XOF"},
 }
 
 # Corridors where Airtel Money withdrawal fee applies
-AIRTEL_CORRIDORS = {"FR_GA", "GA_FR", "FR_CM", "CM_FR", "FR_SN", "SN_FR"}
+# Uniquement quand la destination est le Gabon (Airtel n'est pertinent que pour le retrait d'argent au Gabon)
+AIRTEL_CORRIDORS = {"FR_GA", "SN_GA", "MA_GA"}
 
 # Mapping: which tariff key to use for non-EUR source corridors
 NON_EUR_TARIFF_KEY = {
@@ -38,6 +45,12 @@ NON_EUR_TARIFF_KEY = {
     "CM_FR": "fcfa_tariffs",
     "SN_FR": "fcfa_tariffs",
     "MA_FR": "mad_tariffs",
+    "SN_GA": "fcfa_tariffs",
+    "GA_SN": "fcfa_tariffs",
+    "MA_GA": "mad_tariffs",
+    "GA_MA": "fcfa_tariffs",
+    "SN_MA": "fcfa_tariffs",
+    "MA_SN": "mad_tariffs",
 }
 
 
@@ -51,19 +64,30 @@ def get_tariffs(key):
 def get_rate_for_corridor(corridor: str) -> Decimal:
     """
     Get the latest exchange rate for a corridor from the database.
-    Falls back to static rates if no data in BDD.
+    Since base is EUR in BDD, we cross-calculate for non-EUR pairs.
     """
     from rates.models import RatesHistory
 
-    target_currency = CORRIDOR_CURRENCY_MAP.get(corridor, "XAF")
+    currencies = CORRIDOR_CURRENCIES.get(corridor, {"src": "EUR", "tgt": "XAF"})
+    src_currency = currencies["src"]
+    tgt_currency = currencies["tgt"]
 
-    latest = RatesHistory.objects.first()
-    if latest and latest.rates:
-        db_rate = latest.rates.get(target_currency)
-        if db_rate is not None:
-            return Decimal(str(db_rate))
+    latest = RatesHistory.objects.order_by("-date", "-fetched_at").first()
+    rates_data = latest.rates if latest and latest.rates else {}
 
-    return STATIC_RATES.get(target_currency, Decimal("655.957"))
+    def get_rate(ccy: str) -> Decimal:
+        if ccy == "EUR":
+            return Decimal("1")
+        if ccy in rates_data and rates_data[ccy] is not None:
+            return Decimal(str(rates_data[ccy]))
+        return STATIC_RATES.get(ccy, Decimal("655.957"))
+
+    rate_src = get_rate(src_currency)
+    rate_tgt = get_rate(tgt_currency)
+
+    # Cross rate: 1 SRC = (rate_tgt / rate_src) TGT
+    cross_rate = rate_tgt / rate_src if rate_src > 0 else Decimal("0")
+    return cross_rate.quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
 
 
 def recalculate(state: dict) -> dict:
@@ -73,7 +97,7 @@ def recalculate(state: dict) -> dict:
     Inputs are validated/coerced defensively (consumer is WS-facing).
     """
     corridor = state.get("corridor", "FR_GA")
-    if corridor not in CORRIDOR_CURRENCY_MAP:
+    if corridor not in CORRIDOR_CURRENCIES:
         corridor = "FR_GA"
 
     try:
@@ -90,7 +114,7 @@ def recalculate(state: dict) -> dict:
         state.get("include_airtel_fee", state.get("includeAirtel", False))
     )
 
-    # Airtel only applies to Africa corridors, not Morocco
+    # Airtel only applies to Gabon destinations
     if corridor not in AIRTEL_CORRIDORS:
         include_airtel = False
 
@@ -98,9 +122,9 @@ def recalculate(state: dict) -> dict:
     rate = get_rate_for_corridor(corridor)
 
     is_eur_source = corridor.startswith("FR_")
-    target_currency = CORRIDOR_CURRENCY_MAP.get(corridor, "XAF")
-    currency_sent = "EUR" if is_eur_source else target_currency
-    currency_received = target_currency if is_eur_source else "EUR"
+    currencies = CORRIDOR_CURRENCIES[corridor]
+    currency_sent = currencies["src"]
+    currency_received = currencies["tgt"]
 
     if amount <= 0:
         return {
@@ -132,25 +156,19 @@ def recalculate(state: dict) -> dict:
             adoro_fee = Decimal(str(t.get("fee", 0)))
             break
 
-    if is_eur_source:
-        amount_received = (amount * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-    else:
-        amount_received = (amount / rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if rate > 0 else Decimal("0")
+    amount_received = (amount * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     airtel_fee_target = Decimal("0")
     airtel_fee_source = Decimal("0")
 
     if include_airtel:
-        xaf_amount = amount_received if is_eur_source else amount
-        calculated_fee = (xaf_amount * Decimal("0.03")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        # Airtel is 3% of the received amount in XAF
+        calculated_fee = (amount_received * Decimal("0.03")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         airtel_fee_xaf = min(calculated_fee, Decimal("5000"))
 
-        if is_eur_source:
-            airtel_fee_target = airtel_fee_xaf
-            airtel_fee_source = (airtel_fee_xaf / rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if rate > 0 else Decimal("0")
-        else:
-            airtel_fee_source = airtel_fee_xaf
-            airtel_fee_target = (airtel_fee_xaf / rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if rate > 0 else Decimal("0")
+        airtel_fee_target = airtel_fee_xaf
+        # We need to convert the airtel fee back to the source currency to add it to total_to_send
+        airtel_fee_source = (airtel_fee_xaf / rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if rate > 0 else Decimal("0")
 
     total_to_send = amount + adoro_fee + airtel_fee_source
 

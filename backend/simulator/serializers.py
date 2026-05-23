@@ -14,13 +14,13 @@ from rest_framework import serializers
 
 from .calculator import (
     AIRTEL_CORRIDORS,
-    CORRIDOR_CURRENCY_MAP,
+    CORRIDOR_CURRENCIES,
     recalculate,
 )
 from .models import Transaction
 
 
-VALID_CORRIDORS = set(CORRIDOR_CURRENCY_MAP.keys())
+VALID_CORRIDORS = set(CORRIDOR_CURRENCIES.keys())
 PHONE_RE = re.compile(r"^\+?[0-9\s\-().]{6,30}$")
 
 
@@ -109,14 +109,16 @@ class TransactionCreateSerializer(serializers.ModelSerializer):
         phone = attrs.get("beneficiary_phone", "")
         email = attrs.get("beneficiary_email", "")
 
-        # Africa corridors require a phone, Morocco/PayPal requires an email
-        if corridor in AIRTEL_CORRIDORS and not phone:
+        destination = corridor.split('_')[1] if corridor else ""
+
+        if destination in ('GA', 'SN', 'CM', 'MA') and not phone:
             raise serializers.ValidationError(
-                {"beneficiary_phone": "Telephone du beneficiaire requis pour ce corridor."}
+                {"beneficiary_phone": "Le téléphone du bénéficiaire est requis pour cette destination."}
             )
-        if corridor in ("FR_MA", "MA_FR") and not email and not phone:
+            
+        if destination == 'FR' and not email:
             raise serializers.ValidationError(
-                {"beneficiary_email": "Email ou telephone requis pour le corridor Maroc."}
+                {"beneficiary_email": "L'email PayPal du bénéficiaire est requis pour la France."}
             )
 
         return attrs

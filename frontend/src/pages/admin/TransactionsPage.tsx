@@ -34,6 +34,12 @@ const corridorLabels: Record<string, string> = {
   SN_FR: 'SN → FR',
   FR_MA: 'FR → MA',
   MA_FR: 'MA → FR',
+  SN_GA: 'SN → GA',
+  GA_SN: 'GA → SN',
+  MA_GA: 'MA → GA',
+  GA_MA: 'GA → MA',
+  SN_MA: 'SN → MA',
+  MA_SN: 'MA → SN',
 };
 
 const statusColors: Record<string, string> = {
