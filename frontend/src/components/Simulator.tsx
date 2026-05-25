@@ -90,6 +90,14 @@ export default function Simulator() {
       break;
   }
 
+  // Si on envoie depuis un pays africain VERS la France (destination = FR), on a potentiellement besoin du numéro de l'expéditeur en +33
+  // Mais si tu parles du destinataire en France, la logique est plutôt d'avoir le +33
+  if (destination === 'FR') {
+    needsPhone = true; // Forcer le téléphone même pour la France
+    phoneLabel = "Numéro de téléphone du bénéficiaire";
+    phonePlaceholder = "+33 6 XX XX XX XX";
+  }
+
   // Airtel Money s'applique UNIQUEMENT quand l'argent arrive au Gabon
   const showAirtel = ['FR_GA', 'SN_GA', 'MA_GA'].includes(corridor);
 

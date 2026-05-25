@@ -119,6 +119,18 @@ class TransactionCreateSerializer(serializers.ModelSerializer):
         if not value:
             return ""
         v = value.strip()
+        
+        # Si c'est un numéro français (destination France), s'assurer qu'il commence par +33
+        # L'instance n'est pas encore créée, on récupère le corridor dans les données initiales
+        corridor = self.initial_data.get('corridor')
+        if corridor and corridor.endswith('_FR'):
+            # Nettoyer le numéro (enlever les espaces)
+            clean_val = v.replace(' ', '')
+            if clean_val.startswith('0'):
+                v = f"+33{clean_val[1:]}"
+            elif not clean_val.startswith('+33') and not clean_val.startswith('+'):
+                v = f"+33{clean_val}"
+                
         if not PHONE_RE.match(v):
             raise serializers.ValidationError("Numero de telephone invalide.")
         return v

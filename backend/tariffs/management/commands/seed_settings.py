@@ -151,7 +151,7 @@ DEFAULT_SETTINGS = [
     },
     {
         "key": "whatsapp_number",
-        "value": {"number": "2417449818"},
+        "value": {"number": "0769410916"},
         "description": "Numero WhatsApp pour les notifications et le contact client",
         "is_public": True,
     },

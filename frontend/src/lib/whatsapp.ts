@@ -11,13 +11,28 @@ export async function getWhatsAppNumber(): Promise<string> {
     const { data } = await api.get('/settings/public/');
     const setting = data.find((s: { key: string; value: any }) => s.key === 'whatsapp_number');
     if (setting?.value?.number) {
-      cachedWhatsAppNumber = setting.value.number;
+      // Nettoyage et formatage du numéro vers +33
+      let num = setting.value.number.replace(/\s+/g, ''); // Enlever les espaces
+      
+      // Si le numéro commence par 0, on le remplace par 33 (ex: 0769410916 -> 33769410916)
+      if (num.startsWith('0')) {
+        num = '33' + num.substring(1);
+      } 
+      // Si le numéro ne commence pas par 33 et n'a pas de +, on ajoute 33
+      else if (!num.startsWith('+') && !num.startsWith('33') && !num.startsWith('241')) {
+        num = '33' + num;
+      }
+      
+      // L'API WhatsApp (wa.me) préfère le numéro sans le signe +
+      num = num.replace('+', '');
+      
+      cachedWhatsAppNumber = num;
       return cachedWhatsAppNumber!;
     }
   } catch {
     // fallback
   }
-  return '2417449818';
+  return '33769410916'; // Fallback mis à jour vers ton numéro français
 }
 
 export async function getWhatsAppTemplate(): Promise<string | null> {
@@ -78,7 +93,9 @@ function buildFromTemplate(template: string, data: WhatsAppData): string {
   return template
     .replace(/{corridor}/g, corridorLabels[result.corridor] || result.corridor)
     .replace(/{amount_sent}/g, Number(result.amountSent).toLocaleString('fr-FR'))
+    .replace(/{amount}/g, Number(result.amountSent).toLocaleString('fr-FR'))
     .replace(/{currency_sent}/g, result.currencySent)
+    .replace(/{currency}/g, result.currencySent)
     .replace(/{adoro_fee}/g, Number(result.adoroFee).toLocaleString('fr-FR'))
     .replace(/{airtel_fee}/g, Number(result.airtelFee).toLocaleString('fr-FR'))
     .replace(/{total_to_send}/g, Number(result.totalToSend).toLocaleString('fr-FR'))
@@ -86,6 +103,7 @@ function buildFromTemplate(template: string, data: WhatsAppData): string {
     .replace(/{currency_received}/g, result.currencyReceived)
     .replace(/{rate}/g, `1 ${result.currencySent} = ${Number(result.rate).toLocaleString('fr-FR')} ${result.currencyReceived}`)
     .replace(/{beneficiary_name}/g, beneficiaryName)
+    .replace(/{beneficiary}/g, beneficiaryName)
     .replace(/{beneficiary_phone}/g, beneficiaryPhone || '')
     .replace(/{beneficiary_email}/g, beneficiaryEmail || '');
 }

@@ -110,7 +110,7 @@ export default function SettingsPage() {
       { min: 7501, max: null, fee: 500 },
     ],
     whatsappTemplate:
-      'Bonjour, je souhaite effectuer un transfert.\n\nCorridor: {corridor}\nMontant: {amount} {currency}\nBeneficiaire: {beneficiary}',
+      'Bonjour, je souhaite effectuer un transfert.\n\nCorridor: {corridor}\nMontant envoye: {amount_sent} {currency_sent}\nBeneficiaire recoit: {amount_received} {currency_received}\nTotal a envoyer: {total_to_send} {currency_sent}\nBeneficiaire: {beneficiary_name}\nTelephone: {beneficiary_phone}',
   });
 
   const [saving, setSaving] = useState(false);
@@ -278,7 +278,7 @@ export default function SettingsPage() {
               className="w-full bg-dark-800 border border-dark-500 rounded-xl px-4 py-2.5 text-bone placeholder:text-ash/50 focus:outline-none focus:border-emerald-primary/50 focus:ring-1 focus:ring-emerald-primary/30 transition-colors resize-none font-mono text-sm"
             />
             <p className="mt-2 text-xs text-ash">
-              Variables disponibles: {'{corridor}'}, {'{amount}'}, {'{currency}'}, {'{beneficiary}'}, {'{fee}'}
+              Variables disponibles: {'{corridor}'}, {'{amount_sent}'}, {'{currency_sent}'}, {'{amount_received}'}, {'{currency_received}'}, {'{total_to_send}'}, {'{beneficiary_name}'}, {'{beneficiary_phone}'}
             </p>
           </div>
         </div>
