@@ -9,7 +9,6 @@ import ContactPage from './pages/ContactPage';
 import AdminLayout from './pages/admin/AdminLayout';
 import LoginPage from './pages/admin/LoginPage';
 import DashboardPage from './pages/admin/DashboardPage';
-import RatesPage from './pages/admin/RatesPage';
 import TransactionsPage from './pages/admin/TransactionsPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import UsersPage from './pages/admin/UsersPage';
@@ -42,7 +41,6 @@ function App() {
         <Route path="/admin/login" element={<LoginPage />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<DashboardPage />} />
-          <Route path="rates" element={<RatesPage />} />
           <Route path="transactions" element={<TransactionsPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="users" element={<UsersPage />} />

@@ -134,9 +134,9 @@ CORRIDOR_FEE_RULES = {
 #   MAD  : aligne sur l'equivalent en MAD (env. 150 - 7500 MAD)
 # --------------------------------------------------------------------------
 AMOUNT_LIMITS = {
-    "EUR": {"min": 15,    "max": 1000},
-    "XAF": {"min": 10000, "max": 1000000},
-    "XOF": {"min": 10000, "max": 1000000},
+    "EUR": {"min": 15,    "max": 761.24},
+    "XAF": {"min": 10000, "max": 500000},
+    "XOF": {"min": 10000, "max": 500000},
     "MAD": {"min": 150,   "max": 10000},
     "USD": {"min": 15,    "max": 1000},
 }

@@ -95,6 +95,7 @@ export default function Simulator() {
 
   const isFormValid = () => {
     if (!result || amount <= 0) return false;
+    if (amount > limits.max || amount < limits.min) return false;
     if (!beneficiaryName.trim()) return false;
     if (needsPhone && !beneficiaryPhone.trim()) return false;
     if (needsEmail && !beneficiaryEmail.trim()) return false;
@@ -235,13 +236,26 @@ export default function Simulator() {
             value={amount}
             onChange={(e) => setAmount(Number(e.target.value))}
             placeholder={`Montant sans frais`}
-            className="w-full bg-dark-800 border border-dark-500 border-r-0 rounded-l-xl px-4 py-3 text-bone placeholder:text-ash/50 focus:outline-none focus:border-emerald-primary/50 focus:ring-1 focus:ring-emerald-primary/30 transition-colors"
+            className={`w-full bg-dark-800 border ${amount > limits.max || (amount > 0 && amount < limits.min) ? 'border-red-500/80 focus:border-red-500 focus:ring-red-500/30' : 'border-dark-500 focus:border-emerald-primary/50 focus:ring-emerald-primary/30'} border-r-0 rounded-l-xl px-4 py-3 text-bone placeholder:text-ash/50 focus:outline-none focus:ring-1 transition-colors`}
           />
           <div className="flex items-center justify-center bg-dark-600 border border-dark-500 rounded-r-xl px-4 text-bone font-mono">
             {selectedCorridor?.from || 'EUR'}
           </div>
         </div>
-        {result && (
+        
+        {amount > limits.max && (
+          <p className="mt-2 text-xs text-red-400 font-medium">
+            ⚠️ Le montant dépasse la limite maximum de {limits.max.toLocaleString('fr-FR')} {fromCurrency}.
+          </p>
+        )}
+        
+        {amount > 0 && amount < limits.min && (
+          <p className="mt-2 text-xs text-red-400 font-medium">
+            ⚠️ Le montant doit être d'au moins {limits.min.toLocaleString('fr-FR')} {fromCurrency}.
+          </p>
+        )}
+
+        {result && amount >= limits.min && amount <= limits.max && (
           <p className="mt-2 text-xs text-ash italic">
             Montant des frais : {Number(result.adoroFee).toLocaleString('fr-FR')} {result.currencySent}
           </p>

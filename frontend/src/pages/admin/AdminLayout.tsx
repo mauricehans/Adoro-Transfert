@@ -1,10 +1,20 @@
-import { Navigate, Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, TrendingUp, List, Settings, LogOut, Zap, Users, ShieldCheck } from 'lucide-react';
+import { Link, Outlet, useLocation, Navigate } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Settings,
+  Users,
+  LogOut,
+  List,
+  Zap,
+  ShieldCheck,
+  Menu,
+  X,
+} from 'lucide-react';
+import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 
 const sidebarLinks = [
   { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, superOnly: false },
-  { path: '/admin/rates', label: 'Taux', icon: TrendingUp, superOnly: false },
   { path: '/admin/transactions', label: 'Transactions', icon: List, superOnly: false },
   { path: '/admin/settings', label: 'Parametres', icon: Settings, superOnly: false },
   { path: '/admin/users', label: 'Utilisateurs', icon: Users, superOnly: true },

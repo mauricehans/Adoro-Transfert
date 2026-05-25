@@ -1,0 +1,676 @@
+1 
+CCTP  Adôro  Transfert  - 25-12-2024   
+ 
+ 
+Nom  du projet  : Conception  du site web d’Adoro  Transfert  
+ 
+Slogan  proposé  : “Adoro  Transfert  : L’argent  en mouvement,  sans  effort.”  
+ 
+1. Objectifs  du projet  
+ 
+Créer  un site web moderne  et sécurisé  pour les transferts  d’argent  entre  la France  et le Gabon.  
+Mettre  en avant  Airtel  Money , PayPal , Wave , Wafacash   comme  uniques  moyens  de transfert.  
+Intégrer  un simulateur  interactif  visible  dès la page  d’accueil.  
+Automatiser  un message  WhatsApp  récapitulatif  après  simulation  pour une gestion  efficace  des 
+demandes  clients.  
+  Fichier Annexe  à voir pour la zone  tarif. 
+ 
+2. Fonctionnalités  principales  
+ 
+2.1. Simulateur  interactif  (Page  d’accueil)  
+ 
+❖ Champs  de simulation  : 
+ 
+Montant  à envoyer.  
+                        Sens  des transaction s :  
+▪ (France -Gabon  / Gabon  - France)   
+▪ (Sénégal -Gabon / Gabon Sénégal) (Sénégal – France / France -Sénégal)  
+▪ (Maroc – Gabon / Gabon -Maroc) (Maroc – France / France -Maroc)  
+▪ (Sénégal -Maroc / Maroc Sénégal)  
+ 
+ 
+ 
+❖ Calculs  dynamiques  affichés  : 
+ 
+Montant  envoyé.  
+Frais de transfert (Voir tableau des tarifs)  
+Montant  final reçu.  
+ 
+❖ Bouton  d’action  : 
+ 
+“Envoyer  via WhatsApp”  qui redirige  vers le numéro  WhatsApp  +2417449818  avec  un message  
+automatique  pré-rempli.  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+CAHIER  DE CHARGES  - PROJET  ADÔRO  TRANSFERT  CCTP  
+N°002  DU LOT 060599  
+
+2 
+CCTP  Adôro  Transfert  - 25-12-2024   2.2. Message  automatique  WhatsApp  France – Gabon  
+ 
+❖ Contenu  pour  un envoi  depuis  le sens de la transaction choisie France  vers le  Gabon  : 
+ 
+Bonjour,  
+ 
+Je souhaite  effectuer  un transfert  d'argent  de la France vers  le Gabon  avec  les détails  suivants  : 
+ 
+Montant  à envoyer : [montant  à envoyer]  via PayPal.  
+Montant à recevoir : [montant final reçu] via Airtel Money.  
+Numéro  Airtel  Money  du bénéficiaire  : [numéro  Airtel  Money].  
+Nom  du bénéficiaire  : [nom  complet du bénéficiaire].  
+ 
+Merci  de me guider  pour finaliser l' opération.  
+ 
+ 
+❖ Contenu  pour  un envoi  depuis  le Gabon  vers la France  : 
+ 
+Bonjour,  
+ 
+Je souhaite  effectuer  un transfert  d'argent  du Gabon  vers la France  avec  les détails  suivants  : 
+ 
+Montant  à envoyer : [montant  à envoyer]  via Airtel  Money.  
+Montant  à recevoir  : [montant  final reçu]  via PayPal . 
+Adresse  PayPal  du bénéficiaire  : [adresse  e-mail du bénéficiaire].  
+ 
+Merci  de me guider  pour finaliser l'opération.  
+ 
+2.3. Message  automatique  WhatsApp Sénégal – Gabon  
+ 
+❖ Contenu  pour  un envoi  depuis  le sens de la transaction Sénégal vers  le Gabon  : 
+ 
+Bonjour,  
+ 
+Je souhaite  effectuer  un transfert  d'argent  du Sénégal vers  le Gabon  avec  les détails  suivants  : 
+ 
+Montant  à envoyer : [montant  à envoyer]  via Wave.  
+Montant à recevoir : [montant final reçu] via Airtel Money.  
+Numéro  Airtel  Money  du bénéficiaire  : [numéro  Airtel  Money].  
+Nom  du bénéficiaire  : [nom  complet du bénéficiaire].  
+ 
+Merci  de me guider  pour finaliser l'opération.  
+ 
+❖ Contenu  pour  un envoi  depuis  le Gabon  vers le Sénégal : 
+ 
+Bonjour,  
+ 
+Je souhaite  effectuer  un transfert  d'argent  du Gabon  vers le Sénégal  avec  les détails  suivants  : 
+ 
+Montant  à envoyer : [montant  à envoyer]  via Airtel  Money.  
+Montant  à recevoir  : [montant  final reçu]  via Wave .  
+Numéro  Wave du bénéficiaire  : [numéro  Wave].  
+Nom  du bénéficiaire  : [nom  complet du bénéficiaire].  
+ 
+Merci  de me guider  pour finaliser l'opération.  
+
+3 
+CCTP  Adôro  Transfert  - 25-12-2024   2.4. Message  automatique  WhatsApp Sénégal – France   
+ 
+❖ Contenu  pour  un envoi  depuis  le sens de la transaction France vers  le Sénégal :  
+ 
+Bonjour,  
+ 
+Je souhaite  effectuer  un transfert  d'argent  de la France vers le Sénégal avec  les détails  suivants  : 
+ 
+Montant  à envoyer : [montant  à envoyer]  via PayPal.  
+Montant à recevoir : [montant final reçu] via Wave.   
+Numéro  Wave du bénéficiaire  : [numéro  Wave ]. 
+ Nom  du bénéficiaire  : [nom  complet du bénéficiaire].  
+ 
+Merci  de me guider  pour finaliser l'opération.  
+ 
+❖ Contenu  pour  un envoi  depuis  Le Sénégal vers la France : 
+ 
+Bonjour,  
+ 
+Je souhaite  effectuer  un transfert  d'argent  du Sénégal  vers la France avec  les détails  suivants  : 
+ 
+Montant  à envoyer : [montant  à envoyer]  via Wave . 
+Montant  à recevoir  : [montant  final reçu]  via Paypal . 
+Adresse  PayPal  du bénéficiaire  : [adresse  e-mail du bénéficiaire].  
+ 
+Merci  de me guider  pour finaliser l'opération.  
+ 
+2.5. Message  automatique  WhatsApp Gabon – Maroc    
+ 
+❖ Contenu  pour  un envoi  depuis  le sens de la transaction Gabon vers  le Maroc :  
+ 
+Bonjour,  
+ 
+Je souhaite  effectuer  un transfert  d'argent  du Gabon vers  le Maroc avec  les détails  suivants  : 
+ 
+Montant  à envoyer : [montant  à envoyer]  via Airtel Money.  
+Montant à recevoir : [montant final reçu] via Wafacash .  
+Numéro  Wafacash  du bénéficiaire  : [numéro  Wafacash ]. 
+ Nom  du bénéficiaire  : [nom  complet du bénéficiaire].  
+ 
+Merci  de me guider  pour finaliser l'opération.  
+ 
+❖ Contenu  pour  un envoi  depuis  le Maroc  vers le Gabon  : 
+ 
+Bonjour,  
+ 
+Je souhaite  effectuer  un transfert  d'argent  du Maroc vers le Gabon avec  les détails  suivants  : 
+Montant  à envoyer : [montant  à envoyer]  via Wafacash . 
+Montant  à recevoir  : [montant  final reçu]  via Airtel Money.  
+Numéro  Airtel  Money  du bénéficiaire  : [numéro  Airtel  Money].  
+Nom  du bénéficiaire  : [nom  complet du bénéficiaire].  
+Merci  de me guider  pour finaliser l'opération.  
+
+4 
+CCTP  Adôro  Transfert  - 25-12-2024   2.6. Message  automatique  WhatsApp  Maroc – France    
+ 
+❖ Contenu  pour  un envoi  depuis  le sens de la transaction France vers  le Maroc :  
+ 
+Bonjour,  
+ 
+Je souhaite  effectuer  un transfert  d'argent  de la France vers  le Maroc avec  les détails  suivants  : 
+ 
+Montant  à envoyer : [montant  à envoyer]  via Paypal.  
+Montant à recevoir : [montant final reçu] via Wafacash.  
+Numéro  Wafacash du bénéficiaire  : [numéro  Wafacash].  
+ Nom  du bénéficiaire  : [nom  complet du bénéficiaire].  
+ 
+Merci  de me guider  pour finaliser l'opération.  
+ 
+❖ Contenu  pour  un envoi  depuis  le Maroc vers la France :  
+ 
+Bonjour,  
+ 
+Je souhaite  effectuer  un transfert  d'argent  du Maroc vers la France avec  les détails  suivants  : 
+Montant  à envoyer : [montant  à envoyer]  via Wafacash . 
+Montant  à recevoir  : [montant  final reçu]  via Paypal . 
+Adresse  PayPal  du bénéficiaire  : [adresse  e-mail du bénéficiaire].  
+ 
+Merci  de me guider  pour finaliser l'opération.  
+ 
+2.7. Message  automatique  WhatsApp  Maroc – France    
+ 
+❖ Contenu  pour  un envoi  depuis  le sens de la transaction Sénégal vers  le Maroc :  
+ 
+Bonjour,  
+ 
+Je souhaite  effectuer  un transfert  d'argent  de la France vers  le Maroc avec  les détails  suivants  : 
+ 
+Montant  à envoyer : [montant  à envoyer]  via wave.  
+Montant à recevoir : [montant final reçu] via Wafacash.  
+Numéro  Wafacash du bénéficiaire  : [numéro  Wafacash].  
+ Nom  du bénéficiaire  : [nom  complet du bénéficiaire].  
+ 
+Merci  de me guider  pour finaliser l'opération.  
+ 
+❖ Contenu  pour  un envoi  depuis  le Maroc vers le sénégal  : 
+ 
+Bonjour,  
+ 
+Je souhaite  effectuer  un transfert  d'argent  du Maroc vers la France avec  les détails  suivants  : 
+Montant  à envoyer : [montant  à envoyer]  via Wafacash . 
+Numéro  Wave du bénéficiaire  : [numéro  Wave].  
+ Nom  du bénéficiaire  : [nom  complet du bénéficiaire].  
+ 
+Merci  de me guider  pour finaliser l'opération.  
+ 
+
+5 
+CCTP  Adôro  Transfert  - 25-12-2024    
+ 
+3. Pages  du site  web 
+ 
+3.1. Page  d’accueil  
+ 
+• Sections  principales  : 
+ 
+❖ Simulateur  interactif  (présenté  ci-dessus).  – Indiquer  le sens  de la  transaction.  
+❖ Avantages  : rapidité,  sécurité,  simplicité.  
+❖ Témoignages  clients. 
+❖ Schéma  illustrant  le processus  des transferts  Airtel  Money  ↔ PayPal , Wave  ↔ PayPal, Wafacash  ↔ PayPal 
+❖ Airtel  Money  ↔ Wave , Airtel  Money  ↔ Wafacash  
+❖ Bouton  Contactez -nous  sur WhatsApp  toujours  visible. 
+ 
+3.2. Page  Services  
+ 
+➢ Explications  claires  des 6 (six)  modes  de transfert 
+ 
+❖  France  → Gabon  via PayPal  pour  Airtel  Money,   
+❖   Gabon  → France via  Airtel Money  pour  PayPal. 
+❖   Sénégal → Gabon  via Wave  pour  Airtel  Money, 
+❖   Gabon  → Sénégal  via Airtel Money  pour  Wave 
+❖   Sénégal → France  via Wave  pour  Paypal, 
+❖   France  → Sénégal via  Paypal pour Wave 
+❖   Maroc →  Gabon  via Wafacash  pour  Airtel  Money,   
+❖   Gabon  → Maroc via  Airtel Money  pour  Wafacah . 
+❖   Maroc →  Gabon  via Wafacash  pour  Airtel  Money,   
+❖   Gabon  → Maroc via  Airtel Money  pour  Wafacah . 
+❖   Maroc →  Sénégal  via Wafacash  pour  Wave,   
+❖   Sénégal  → Maroc via  Wave pour Wafacah ) 
+ 
+ 
+ 
+ 
+- Transfert  France  → Gabon  via PayPal  pour  Airtel  Money  
+ 
+Ce mode  de transfert  permet  à un expéditeur  basé  en France  d'envoyer  de l'argent  via PayPal  à un 
+bénéficiaire au  Gabon,  qui recevra  les fonds sur  son compte  Airtel  Money . 
+ 
+Étapes  à suivre :  
+ 
+1. Pour  l'expéditeur en  France :  
+ 
+✓ Connectez -vous  à votre  compte  PayPal. 
+✓ Indiquez  le montant  que vous  souhaitez  transférer  et renseignez  l'adresse  e-mail 
+AdoroTransfert@gmail.com  
+✓ Effectuez  le paiement  via PayPal. 
+6 
+CCTP  Adôro  Transfert  - 25-12-2024   2. Pour  le bénéficiaire  au Gabon  : 
+ 
+✓ Les fonds  transférés  sont convertis  et crédités  sur le compte  Airtel  Money  du bénéficiaire,  après  
+déduction des frais.  
+✓ Le bénéficiaire  reçoit  une notification  Airtel  Money  confirmant  la réception  des fonds.  
+ 
+Avantages  : 
+ 
+Rapidité  : Le transfert  est traité  rapidement,  souvent  en quelques  minutes.  
+Sécurité  : PayPal  offre une plateforme  sécurisée  pour les  paiements  en ligne.  
+Accessibilité  : Le bénéficiaire  reçoit  directement  les fonds  sur son compte  Airtel  Money  sans  avoir  
+besoin  d'un compte  bancaire.  
+Traçabilité  : Vous  recevez  une confirmation  du transfert,  garantissant  que les fonds  ont bien été 
+envoyés.  
+ 
+ 
+2. Transfert  Gabon  → France  via Airtel  Money pour  PayPal  
+ 
+Ce mode  de transfert  permet  à un expéditeur  basé  au Gabon  d'envoyer  de l'argent  via Airtel  Money  à 
+un bénéficiaire  en France,  qui recevra  les fonds  sur son compte  PayPal . 
+ 
+Étapes  à suivre :  
+ 
+1. Pour  l'expéditeur au  Gabon  : 
+ 
+✓ Chargez  votre  compte  Airtel  Money  avec  le montant  souhaité.  
+✓ Effectuez  le transfert en  fournissant  : 
+✓ Le montant  à envoyer.  
+✓ L'adresse  e-mail PayPal  du bénéficiaire  en France. 
+ 
+ 
+2. Pour  le bénéficiaire  en France  : 
+ 
+✓ Les fonds  envoyés  sont convertis  et crédités  sur le compte  PayPal  du bénéficiaire  après  déduction  
+des frais. 
+✓ Une notification  PayPal  est envoyée  au bénéficiaire  dès que les fonds  sont disponibles.  
+ 
+Avantages  : 
+ 
+Facilité  d'utilisation : Airtel  Money  est accessible  même  sans  compte  bancaire.  
+Transfert  international  direct  : Pas besoin  d'intermédiaires  complexes.  
+Taux  compétitifs  : Conversion  automatique  des devises  à des taux souvent  avantageux.  
+Grande  couverture  : Airtel  Money  est largement  disponible  au Gabon,  et PayPal  est accepté  dans  
+le monde  entier.  
+Flexibilité  : Le bénéficiaire  peut utiliser  les fonds  reçus  directement  pour des achats  en ligne  ou 
+des retraits via  PayPal.  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+7 
+CCTP  Adôro  Transfert  - 25-12-2024   Transfert Sénégal → Gabon via Wave pour Airtel Money  
+Étapes à suivre :  
+1. Pour l'expéditeur au Sénégal :  
+o Connectez -vous à votre compte Wave.  
+o Indiquez le montant à transférer et renseignez l'adresse e -mail AdoroTransfert@gmail.com . 
+o Effectuez le paiement via Wave.  
+2. Pour le bénéficiaire au Gabon :  
+o Les fonds sont crédités sur le compte Airtel Money après conversion et déduction des frais.  
+o Le bénéfic iaire reçoit une notification Airtel Money confirmant la réception.  
+ 
+Transfert Gabon → Sénégal via Airtel Money pour Wave  
+Étapes à suivre :  
+1. Pour l'expéditeur au Gabon :  
+o Chargez votre compte Airtel Money avec le montant so uhaité.  
+o Effectuez le transfert en fournissant les informations nécessaires (montant et compte Wave du bénéficiaire 
+au Sénégal).  
+2. Pour le bénéficiaire au Sénégal :  
+o Les fonds sont crédités sur le compte Wave après conversion.  
+o Le bénéficiaire reçoit une notifi cation confirmant la réception.  
+ 
+Transfert Sénégal → France via Wave pour PayPal  
+Étapes à suivre :  
+1. Pour l'expéditeur au Sénégal :  
+o Connectez -vous à votre compte Wave.  
+o Effectuez le transfert en fournissant l'adresse e -mail PayPal du bénéficiaire en France.  
+2. Pour le bénéficiaire en France :  
+o Les fonds sont convertis et crédités sur le compte PayPal après déduction des frais.  
+o Une notification PayPal est envoyée pour confirme r la réception.  
+ 
+Transfert France → Sénégal via PayPal pour Wave  
+Étapes à suivre :  
+1. Pour l'expéditeur en France :  
+o Connectez -vous à votre compte PayPal.  
+o Effectuez le paiement vers l'adresse e -mail AdoroTransfert@gmail.com . 
+2. Pour le bénéficiaire au Sénégal :  
+o Les fonds sont convertis et crédités sur le compte Wave du bénéficiaire.  
+o Une notification Wave confirme la réception des fonds.  
+ 
+Transfert Maroc → Gabon via Wafacash pour Airtel Money  
+Étapes à suivre :  
+1. Pour l'expéditeur au Maroc :  
+o Rendez -vous dans une agence Wafacash.  
+o Fournissez les détails du transfert et les coordonnées du bénéficiaire au Gabon.  
+8 
+CCTP  Adôro  Transfert  - 25-12-2024   2. Pour le bénéficiaire au Gabon :  
+o Les fonds sont crédités sur le compte Airtel Money après conv ersion.  
+o Une notification Airtel Money confirme la réception.  
+ 
+Transfert Gabon → Maroc via Airtel Money pour Wafacash  
+Étapes à suivre :  
+1. Pour l'expéditeur au Gabon :  
+o Chargez votre compte Airtel Money.  
+o Fournissez les informations pour le transfert via Wafacash (coordonnées du bénéficiaire au Maroc).  
+2. Pour le bénéficiaire au Maroc :  
+o Les fonds sont disponibles en agence Wafacash après confirmation.  
+ 
+Transfert Maroc → Sénégal via Wafacash pour Wave  
+Étapes à suivre :  
+1. Pour l'expéditeur au Maroc :  
+o Rendez -vous dans une agence Wafacash.  
+o Fournissez les coordonnées du bénéficiaire au Sénégal (compte Wave).  
+2. Pour le bénéficiaire au Sénégal :  
+o Les fon ds sont crédités sur le compte Wave après conversion.  
+ 
+Transfert Sénégal → Maroc via Wave pour Wafacash  
+Étapes à suivre :  
+1. Pour l'expéditeur au Sénégal :  
+o Connectez -vous à votre compte Wave.  
+o Effectuez le transfert vers Wafa cash en fournissant les informations nécessaires.  
+2. Pour le bénéficiaire au Maroc :  
+o Les fonds sont disponibles en agence Wafacash après confirmation.  
+ 
+Avantages communs pour tous les transferts :  
+• Rapidité :  Les fonds sont transférés en quelques minutes.  
+• Sécurité :  Les plateformes utilisées garantissent des transactions sécurisées.  
+• Flexibilité :  Les bénéficiaires peuven t utiliser les fonds directement ou les retirer selon leurs besoins.  
+• Traçabilité :  Une confirmation est envoyée à chaque étape pour garantir la transparence.  
+ 
+« Si possibilité  de mettre  des petites icones  défilant pour  attirer  l’attention  du lecteur »   
+ 
+ 
+❖ Mettre  un boutons  CTA reliés  à WhatsApp  avec  message  automatique.  
+9 
+CCTP  Adôro  Transfert  - 25-12-2024   3.3. Page  Tarifs  
+ 
+• Présentation  des frais :  dans  tous les deux  sens  de transaction.  
+• Simulateur  interactif  répliqué  ici. Pour  inciter les  clients  à faire une simulation  
+ 
+3.4. Page  FAQ  (Personnalise en fonction des différents pays)   
+ 
+• Questions  fréquentes  avec  redirection vers  WhatsApp  pour  des réponses  spécifiques.  
+ 
+1. Quels  sont  les délais  pour  un transfert  ? 
+ 
+• Réponse  : Les transferts  sont généralement  instantanés  ou peuvent  prendre  quelques  minutes  
+à quelques heures selon les plateformes utilisées.  
+ 
+2. Quels  sont  les frais  appliqués  ? 
+ 
+• Réponse  : Les frais varient  en fonction  des montants  transférés  et des plateformes  utilisées  
+(PayPal,  Airtel  Money).  Une simulation  est recommandée pour  connaître  les coûts  exacts.  
+ 
+3. Quels  sont  les montants  minimum  et maximum pour  un transfert  ? 
+ 
+• Réponse  : 
+ 
+✓ En Francs  CFA : Le montant  minimum  est de 10 000 FCFA  et le montant  maximum  est de 500 
+000 FCFA  par transaction.  
+✓ En Euros  : Le montant  minimum  est de 15 € et le montant  maximum  est de 760 € (selon  le taux 
+de change).  
+ 
+Ces limites  peuvent  varier  en fonction  des réglementations  locales  et des conditions  spécifiques  des 
+plateformes  utilisées.  (Bien  mettre  en évidence cette  phrase)  
+ 
+4. Quels  documents  ou informations  dois-je fournir ?  
+ 
+• Réponse  : Vous  devez  fournir  les informations  suivantes  : 
+ 
+✓ France  → Gabon : Numéro  Airtel  Money,  nom complet  du bénéficiaire,  
+✓ Gabon  → France : Adresse  e-mail PayPal  et le montant  à envoyer.  
+ 
+5. Comment  puis-je suivre  ma transaction  ? 
+ 
+• Réponse  : 
+ 
+✓ Pour  PayPal  : Connectez -vous  à votre  compte  pour voir le statut  de la transaction.  
+✓ Pour  Airtel  Money  : Une notification SMS  sera envoyée  au bénéficiaire.  
+ 
+Des questions  spécifiques  ? Contactez -nous  ! 
+Pour  des réponses  précises  ou un accompagnement  personnalisé,  contactez -nous  directement  via 
+WhatsApp  en cliquant  sur le  lien suivant  : 
+ 
+📲Accéder  à WhatsApp  mettre  le bouton  d’action  qui dirigera  vers WhatsApp.  
+ 
+Nos conseillers  sont disponibles  pour vous  aider à  chaque  étape  du processus.  
+10 
+CCTP  Adôro  Transfert  - 25-12-2024    
+3.5. Page  Contact  
+ 
+Formulaire  de contact  (nom,  e-mail,  message)  avec  redirection  vers WhatsApp  après  validation.  
+ 
+4. Redirection  vers WhatsApp  
+ 
+Le bouton  “Envoyer  via WhatsApp”  intègre  un lien dynamique  généré  avec  les champs  remplis  
+ 
+• URL de redirection  : 
+ 
+https://wa.me/2417449818?text=Bonjour,%20je%20souhaite%20 effectuer%20un%20transfert%20d'ar  
+gent%20via%20Adoro%20 Transfert.%20Voici%20les%20détails%20:%20[contenu_dynamique] . 
+ 
+5. Processus  utilisateur  simplifié  
+ 
+5.1. France  → Gabon  / Sénégal → Gabon  / Maroc → Gabon  
+ 
+ 
+❖ L’utilisateur  entre  le montant  dans  le simulateur  sur la page  d’accueil.  
+❖ Le résultat affiche  le montant  avec  les frais (Voir Tableau  ci-dessous ) et sans  frais 
+❖ (Frais  mettre  un bouton  de sélection  pour savoir  si le client  inclus  les frais de retrait  Airtel  Money  
+ou pas) 
+ 
+Illustration  1 : ☒ Si le client  sélection  (Inclure  les frais de retrait  Airtel  Money  dans  le calcul  du montant  
+final à envoyer  à Adôro  Transfert  sera avec  l’ajout  des frais de  retrait.  
+Illustration  2 : ☐ Si le client  ne sélection  pas cette  case  le montant  à envoyer  à Adôro  Transfert  sera 
+juste  avec nos frais à  nous  hors frais de  frais de retrait.  
+ 
+❖ Il renseigne  le numéro  Airtel  Money 
+❖ Il clique  sur Envoyer  via WhatsApp.  
+❖ Un message  automatique  récapitulatif  est généré et  envoyé  via notre WhatsApp.  
+❖ Dialogue  avec  l’équipe  Adôro  pour fournir  les détails  et finaliser  l’opération . 
+ 
+5.2. Gabon  → France / Gabon  → Sénégal / Gabon  → Maroc   
+ 
+❖ L’utilisateur  entre  le montant  dans  le simulateur  sur la page  d’accueil.  
+❖ Le résultat affiche  le montant  avec  les frais (Voir Tableau  ci-dessous ) et sans  frais 
+❖ Il renseigne  l’adresse  PayPal  ou N° Wave ou Wafacash  
+❖ Il clique  sur Envoyer  via WhatsApp.  
+❖ Un message  automatique  récapitulatif  est généré et  envoyé  via notre  WhatsApp.  
+❖ Dialogue  avec  l’équipe  Adôro  pour fournir  les détails  et finaliser  l’opération  via Airtel  Money. 
+ 
+6. Spécifications  techniques  
+ 
+6.1. Sécurité  
+ 
+❖ Intégration  de certificats  SSL. 
+❖ API sécurisée  pour Airtel  Money  , PayPal  , Wave et Wafacash . 
+
+11 
+CCTP  Adôro  Transfert  - 25-12-2024   
+6.2. Interface  utilisateur  (UI) 
+ 
+✓ Design  moderne  basé  sur le logo et couleurs  vertes  et blanches.  
+✓ Responsive  pour tous les appareils.  
+✓ Police  en Helvetica  
+✓ Pour  les couleurs  de fond utiliser  le code  couleur  du logo en et les Titre en gras et les  Sous -titre et 
+pas en gras 
+✓ Mettre les devise s en fonctions des pays  
+✓ Indiquez les differents  sens de transaction évoqué  
+ 
+Mettre du texte sous les colonnes comme les images ci -dessous les interface pour les deux pages  
+doivent être présenté comme les images suivante tout en mettant en valeur de code couleur et mettre  
+des belles  images  de fond derrière ou  même  mettre  une vidéo  d’échange  ou d’envoi  d’argent.  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Les Images non contractuel ci -dessus sont les représentations parfaites pour les deux interfaces de  
+transfert  de la France  et du Gabon  sur le site Adôro  Transfert  bien mettre  les signes  monétaires  lorsque  
+le client sélection le  sens de  la transaction.  
+ 
+-    Tenir  comptes  des infos données  pour  la structuration  
+Lorsque  le client  clique  sur le montant à  envoyer  pas de message  qui s’affiche  pour  indiquer  le 
+montant mini et maxi car il sera déjà indiquer en bas du rectangle sens de la transaction ( Voir  
+image  ci-dessus  )  . 
+ 
+12 
+CCTP  Adôro  Transfert  - 25-12-2024   
+6.3. Intégration  WhatsApp  
+ 
+✓ Dynamique  et entièrement  automatisée  via les messages  pré-remplis. 
+ 
+7. Le slogans  
+ 
+“Adôro  Transfert  : L’argent  en mouvement,  sans  effort.”  
+ 
+8. Délai  de livraison  du CCTP  
+ 
+  Le 31 décembre 2024  
+  Le 28 analyse  des erreurs  et présentation  officielle.  
+ 
+ 
+Lancement   officiel  prévu  pour  le 10 Janvier  2025. 
+
+13 
+CCTP  Adôro  Transfert  - 25-12-2024   ANNEXE  N° 1 GRILLE DES  TARIFS  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+14 
+CCTP  Adôro  Transfert  - 25-12-2024    
+ANNEXE  N° 1 GRILLE  DES TARIFS  FRAIS  DE 
+RETRAIT AIRTEL  MONEY  ET FRAIS  DE TRANSFERT  
+ 
+ 
+ 
+ 
+ 
+ 
+  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+15 
+CCTP  Adôro  Transfert  - 25-12-2024    
+ 
+- Pour  la transaction  entre la Gabon  et le Sénégal  c’est 4.5%  du montant à envoyer  (Vice  versa)   
+- Pour la transaction  entre  le Sénégal  et la France  c’est 5% du montant à envoyer (Vice  versa)  
+- Pour la transaction entre le Gabon et le Maroc c’est 4.5 %  du montant à envoyer (Vice  versa)   
+- Pour la transaction entre le Maroc et la France  c’est 5% du mont ant à envoyer (Vice  Versa)   
+- Pour la transaction entre le Sén égal et le Maroc c ’est 4.5 % du montant à envo yer (Vice  Versa)   
+ 
+Nota  : Tous les transferts  sont à partir de 10 000 CFA ou  autres monnaies . 
+ 
+ 
+- Tout le c hiffrage ci-dessus  est hors frais de retrai t. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
