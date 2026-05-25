@@ -138,17 +138,15 @@ function buildDefault(data: WhatsAppData): string {
 }
 
 export function buildWhatsAppUrl(data: WhatsAppData): string {
-  const { whatsappNumber, template, result } = data;
+  const { whatsappNumber, result } = data;
 
-  // Priorité :
-  // 1. Template BDD admin (si configuré via Settings)
-  // 2. Template spécifique au corridor (CCTP §2.2 à §2.7)
-  // 3. Template générique de secours
+  // Toujours utiliser le template spécifique au corridor.
+  // Les templates sont définis par corridor dans whatsappTemplates.ts
+  // et incluent uniquement les champs pertinents (email ou téléphone selon la destination).
   const corridorTemplate = getCorridorTemplate(result.corridor);
-  const finalTemplate = template || corridorTemplate;
 
-  const message = finalTemplate
-    ? buildFromTemplate(finalTemplate, data)
+  const message = corridorTemplate
+    ? buildFromTemplate(corridorTemplate, data)
     : buildDefault(data);
   const encoded = encodeURIComponent(message);
   return `https://wa.me/${whatsappNumber}?text=${encoded}`;

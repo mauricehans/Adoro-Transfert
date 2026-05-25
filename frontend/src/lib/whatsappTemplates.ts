@@ -1,14 +1,3 @@
-/**
- * Templates de messages WhatsApp par corridor.
- * Conformes au CCTP §2.2 à §2.7 : chaque corridor doit citer explicitement
- * les moyens de paiement attendus (PayPal, Airtel Money, Wave, Wafacash, MTN MoMo).
- *
- * Les placeholders {amount_sent}, {currency_sent}, {adoro_fee}, {airtel_fee},
- * {total_to_send}, {amount_received}, {currency_received}, {rate},
- * {beneficiary_name}, {beneficiary_phone}, {beneficiary_email}, {corridor}
- * sont remplaces par buildFromTemplate() dans whatsapp.ts.
- */
-
 interface CorridorTemplate {
   corridor: string;
   paymentFrom: string;
@@ -22,11 +11,17 @@ function makeTemplate(opts: {
   paymentFrom: string;
   paymentTo: string;
   withAirtel?: boolean;
+  withPhone?: boolean;
+  withEmail?: boolean;
 }): string {
-  const { fromCountry, toCountry, paymentFrom, paymentTo, withAirtel } = opts;
+  const { fromCountry, toCountry, paymentFrom, paymentTo, withAirtel, withPhone, withEmail } = opts;
+
   const airtelLine = withAirtel
-    ? "Frais de retrait Airtel Money : {airtel_fee} {currency_received}\n"
+    ? `Frais de retrait Airtel Money : {airtel_fee} {currency_received}\n`
     : '';
+  const phoneLine = withPhone ? `Téléphone : {beneficiary_phone}\n` : '';
+  const emailLine = withEmail ? `Email PayPal : {beneficiary_email}\n` : '';
+
   return (
     `Bonjour Adoro Transfert,\n\n` +
     `Je souhaite effectuer un transfert depuis ${fromCountry} vers ${toCountry}.\n\n` +
@@ -42,14 +37,14 @@ function makeTemplate(opts: {
     `Taux appliqué : {rate}\n\n` +
     `--- Bénéficiaire ---\n` +
     `Nom : {beneficiary_name}\n` +
-    `Téléphone : {beneficiary_phone}\n` +
-    `Email : {beneficiary_email}\n\n` +
+    phoneLine +
+    emailLine +
     `Merci de me confirmer les instructions de paiement via ${paymentFrom}.`
   );
 }
 
 export const CORRIDOR_TEMPLATES: Record<string, CorridorTemplate> = {
-  // ---------- §2.2 : France ↔ Gabon ----------
+  // France → Gabon (PayPal → Airtel Money) : téléphone requis
   FR_GA: {
     corridor: 'FR_GA',
     paymentFrom: 'PayPal',
@@ -60,8 +55,11 @@ export const CORRIDOR_TEMPLATES: Record<string, CorridorTemplate> = {
       paymentFrom: 'PayPal',
       paymentTo: 'Airtel Money',
       withAirtel: true,
+      withPhone: true,
     }),
   },
+
+  // Gabon → France (Airtel Money → PayPal) : email requis
   GA_FR: {
     corridor: 'GA_FR',
     paymentFrom: 'Airtel Money',
@@ -71,10 +69,11 @@ export const CORRIDOR_TEMPLATES: Record<string, CorridorTemplate> = {
       toCountry: 'la France',
       paymentFrom: 'Airtel Money',
       paymentTo: 'PayPal',
+      withEmail: true,
     }),
   },
 
-  // ---------- §2.3 : France ↔ Sénégal ----------
+  // France → Sénégal (PayPal → Wave) : téléphone requis
   FR_SN: {
     corridor: 'FR_SN',
     paymentFrom: 'PayPal',
@@ -84,8 +83,11 @@ export const CORRIDOR_TEMPLATES: Record<string, CorridorTemplate> = {
       toCountry: 'le Sénégal',
       paymentFrom: 'PayPal',
       paymentTo: 'Wave',
+      withPhone: true,
     }),
   },
+
+  // Sénégal → France (Wave → PayPal) : email requis
   SN_FR: {
     corridor: 'SN_FR',
     paymentFrom: 'Wave',
@@ -95,10 +97,11 @@ export const CORRIDOR_TEMPLATES: Record<string, CorridorTemplate> = {
       toCountry: 'la France',
       paymentFrom: 'Wave',
       paymentTo: 'PayPal',
+      withEmail: true,
     }),
   },
 
-  // ---------- §2.4 : France ↔ Maroc ----------
+  // France → Maroc (PayPal → Wafacash) : téléphone requis
   FR_MA: {
     corridor: 'FR_MA',
     paymentFrom: 'PayPal',
@@ -108,8 +111,11 @@ export const CORRIDOR_TEMPLATES: Record<string, CorridorTemplate> = {
       toCountry: 'le Maroc',
       paymentFrom: 'PayPal',
       paymentTo: 'Wafacash',
+      withPhone: true,
     }),
   },
+
+  // Maroc → France (Wafacash → PayPal) : email requis
   MA_FR: {
     corridor: 'MA_FR',
     paymentFrom: 'Wafacash',
@@ -119,10 +125,11 @@ export const CORRIDOR_TEMPLATES: Record<string, CorridorTemplate> = {
       toCountry: 'la France',
       paymentFrom: 'Wafacash',
       paymentTo: 'PayPal',
+      withEmail: true,
     }),
   },
 
-  // ---------- §2.5 : Gabon ↔ Sénégal ----------
+  // Gabon → Sénégal (Airtel Money → Wave) : téléphone requis
   GA_SN: {
     corridor: 'GA_SN',
     paymentFrom: 'Airtel Money',
@@ -132,8 +139,11 @@ export const CORRIDOR_TEMPLATES: Record<string, CorridorTemplate> = {
       toCountry: 'le Sénégal',
       paymentFrom: 'Airtel Money',
       paymentTo: 'Wave',
+      withPhone: true,
     }),
   },
+
+  // Sénégal → Gabon (Wave → Airtel Money) : téléphone requis
   SN_GA: {
     corridor: 'SN_GA',
     paymentFrom: 'Wave',
@@ -144,10 +154,11 @@ export const CORRIDOR_TEMPLATES: Record<string, CorridorTemplate> = {
       paymentFrom: 'Wave',
       paymentTo: 'Airtel Money',
       withAirtel: true,
+      withPhone: true,
     }),
   },
 
-  // ---------- §2.6 : Gabon ↔ Maroc ----------
+  // Gabon → Maroc (Airtel Money → Wafacash) : téléphone requis
   GA_MA: {
     corridor: 'GA_MA',
     paymentFrom: 'Airtel Money',
@@ -157,8 +168,11 @@ export const CORRIDOR_TEMPLATES: Record<string, CorridorTemplate> = {
       toCountry: 'le Maroc',
       paymentFrom: 'Airtel Money',
       paymentTo: 'Wafacash',
+      withPhone: true,
     }),
   },
+
+  // Maroc → Gabon (Wafacash → Airtel Money) : téléphone requis
   MA_GA: {
     corridor: 'MA_GA',
     paymentFrom: 'Wafacash',
@@ -169,10 +183,11 @@ export const CORRIDOR_TEMPLATES: Record<string, CorridorTemplate> = {
       paymentFrom: 'Wafacash',
       paymentTo: 'Airtel Money',
       withAirtel: true,
+      withPhone: true,
     }),
   },
 
-  // ---------- §2.7 : Sénégal ↔ Maroc ----------
+  // Sénégal → Maroc (Wave → Wafacash) : téléphone requis
   SN_MA: {
     corridor: 'SN_MA',
     paymentFrom: 'Wave',
@@ -182,8 +197,11 @@ export const CORRIDOR_TEMPLATES: Record<string, CorridorTemplate> = {
       toCountry: 'le Maroc',
       paymentFrom: 'Wave',
       paymentTo: 'Wafacash',
+      withPhone: true,
     }),
   },
+
+  // Maroc → Sénégal (Wafacash → Wave) : téléphone requis
   MA_SN: {
     corridor: 'MA_SN',
     paymentFrom: 'Wafacash',
@@ -193,10 +211,11 @@ export const CORRIDOR_TEMPLATES: Record<string, CorridorTemplate> = {
       toCountry: 'le Sénégal',
       paymentFrom: 'Wafacash',
       paymentTo: 'Wave',
+      withPhone: true,
     }),
   },
 
-  // ---------- Cameroun (non spécifié au CCTP, conservé par cohérence) ----------
+  // France → Cameroun (PayPal → MTN MoMo) : téléphone requis
   FR_CM: {
     corridor: 'FR_CM',
     paymentFrom: 'PayPal',
@@ -206,8 +225,11 @@ export const CORRIDOR_TEMPLATES: Record<string, CorridorTemplate> = {
       toCountry: 'le Cameroun',
       paymentFrom: 'PayPal',
       paymentTo: 'MTN Mobile Money',
+      withPhone: true,
     }),
   },
+
+  // Cameroun → France (MTN MoMo → PayPal) : email requis
   CM_FR: {
     corridor: 'CM_FR',
     paymentFrom: 'MTN Mobile Money',
@@ -217,14 +239,11 @@ export const CORRIDOR_TEMPLATES: Record<string, CorridorTemplate> = {
       toCountry: 'la France',
       paymentFrom: 'MTN Mobile Money',
       paymentTo: 'PayPal',
+      withEmail: true,
     }),
   },
 };
 
-/**
- * Récupère le template spécifique pour un corridor donné.
- * Retourne `null` si aucun template spécifique n'existe (fallback générique).
- */
 export function getCorridorTemplate(corridorKey: string): string | null {
   return CORRIDOR_TEMPLATES[corridorKey]?.template || null;
 }

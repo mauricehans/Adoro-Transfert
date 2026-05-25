@@ -17,7 +17,6 @@ interface Settings {
   fcfaTariffs: TariffRow[];
   eurTariffs: TariffRow[];
   madTariffs: TariffRow[];
-  whatsappTemplate: string;
 }
 
 export default function SettingsPage() {
@@ -82,8 +81,7 @@ export default function SettingsPage() {
       { min: 699.75, max: 761.24, fee: 39.62 },
       { min: 761.25, max: null, fee: 50.00 },
     ],
-    madTariffs: [
-      { min: 150, max: 450, fee: 23 },
+    madTariffs: [{ min: 150, max: 450, fee: 23 },
       { min: 451, max: 750, fee: 38 },
       { min: 751, max: 1050, fee: 46 },
       { min: 1051, max: 1350, fee: 68 },
@@ -109,8 +107,6 @@ export default function SettingsPage() {
       { min: 7051, max: 7500, fee: 396 },
       { min: 7501, max: null, fee: 500 },
     ],
-    whatsappTemplate:
-      'Bonjour, je souhaite effectuer un transfert.\n\nCorridor: {corridor}\nMontant envoye: {amount_sent} {currency_sent}\nBeneficiaire recoit: {amount_received} {currency_received}\nTotal a envoyer: {total_to_send} {currency_sent}\nBeneficiaire: {beneficiary_name}\nTelephone: {beneficiary_phone}',
   });
 
   const [saving, setSaving] = useState(false);
@@ -152,7 +148,6 @@ export default function SettingsPage() {
           ...prev,
           whatsappNumber: map.whatsapp_number?.number || prev.whatsappNumber,
           emailRecipient: map.notification_email?.email || prev.emailRecipient,
-          whatsappTemplate: map.whatsapp_template?.template || prev.whatsappTemplate,
           fcfaTariffs: map.fcfa_tariffs?.tariffs || prev.fcfaTariffs,
           eurTariffs: map.eur_tariffs?.tariffs || prev.eurTariffs,
           // La grille MAD n'est plus lue depuis l'API, on la calcule à la volée !
@@ -175,9 +170,6 @@ export default function SettingsPage() {
         }),
         api.patch('/settings/whatsapp_number/', {
           value: { number: settings.whatsappNumber },
-        }),
-        api.patch('/settings/whatsapp_template/', {
-          value: { template: settings.whatsappTemplate },
         }),
         api.patch('/settings/fcfa_tariffs/', {
           value: { tariffs: settings.fcfaTariffs },
@@ -261,25 +253,6 @@ export default function SettingsPage() {
               onChange={(e) => setSettings((prev) => ({ ...prev, emailRecipient: e.target.value }))}
               placeholder="contact@adoro-transfert.com"
             />
-          </div>
-        </div>
-
-        {/* WhatsApp template */}
-        <div className="glass-card p-6">
-          <h2 className="font-display text-xl text-bone mb-4">TEMPLATE WHATSAPP</h2>
-          <div>
-            <label className="block text-sm font-mono text-ash mb-1.5 uppercase tracking-wider">
-              Message pre-rempli
-            </label>
-            <textarea
-              value={settings.whatsappTemplate}
-              onChange={(e) => setSettings((prev) => ({ ...prev, whatsappTemplate: e.target.value }))}
-              rows={5}
-              className="w-full bg-dark-800 border border-dark-500 rounded-xl px-4 py-2.5 text-bone placeholder:text-ash/50 focus:outline-none focus:border-emerald-primary/50 focus:ring-1 focus:ring-emerald-primary/30 transition-colors resize-none font-mono text-sm"
-            />
-            <p className="mt-2 text-xs text-ash">
-              Variables disponibles: {'{corridor}'}, {'{amount_sent}'}, {'{currency_sent}'}, {'{amount_received}'}, {'{currency_received}'}, {'{total_to_send}'}, {'{beneficiary_name}'}, {'{beneficiary_phone}'}
-            </p>
           </div>
         </div>
 

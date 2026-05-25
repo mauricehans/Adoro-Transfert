@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowRightLeft, MessageCircle, User, Phone, Mail, Activity } from 'lucide-react';
 import Button from './ui/Button';
 import { useSimulationStore } from '../store';
-import { buildWhatsAppUrl, getWhatsAppNumber, getWhatsAppTemplate } from '../lib/whatsapp';
+import { buildWhatsAppUrl, getWhatsAppNumber } from '../lib/whatsapp';
 import api from '../lib/api';
 import TransferDetails from './TransferDetails';
 import { usePublicSettings } from '../hooks/usePublicSettings';
@@ -169,11 +169,7 @@ export default function Simulator() {
       // sauvegarde echouee, on continue quand meme vers WhatsApp
     }
 
-    // Recuperation du numero et du template WhatsApp depuis la BDD
-    const [whatsappNumber, template] = await Promise.all([
-      getWhatsAppNumber(),
-      getWhatsAppTemplate(),
-    ]);
+    const whatsappNumber = await getWhatsAppNumber();
 
     const url = buildWhatsAppUrl({
       result,
@@ -181,7 +177,7 @@ export default function Simulator() {
       beneficiaryPhone,
       beneficiaryEmail,
       whatsappNumber,
-      template,
+      template: null,
     });
     window.open(url, '_blank');
     setSending(false);
