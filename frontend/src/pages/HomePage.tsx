@@ -23,42 +23,46 @@ export default function HomePage() {
 
   return (
     <div className="pt-16">
-      {/* Hero */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+      {/* Hero Section */}
+      <section className="relative min-h-[90vh] overflow-visible">
         {/* Grid background */}
-        <div className="absolute inset-0 grid-bg" />
+        <div className="absolute inset-0 grid-bg pointer-events-none" />
         {/* Glow */}
-        <div className="absolute inset-0 hero-glow" />
+        <div className="absolute inset-0 hero-glow pointer-events-none" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left: Text */}
-          <div className="animate-fade-up">
-            <h1 className="font-display text-5xl md:text-7xl text-bone leading-tight mb-6">
-              TRANSFERTS<br />
-              <span className="text-gradient">SIMPLES & RAPIDES</span>
-            </h1>
-            <p className="text-ash text-lg md:text-xl leading-relaxed mb-8 max-w-lg">
-              Simulez vos transferts d'argent entre la France, le Gabon, le Cameroun, le Senegal et le Maroc. Taux en temps reel, frais transparents.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link to="/services">
-                <Button size="lg">
-                  Nos corridors
-                  <ArrowRight size={18} className="ml-2" />
-                </Button>
-              </Link>
-              <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer">
-                <Button variant="secondary" size="lg">
-                  <MessageCircle size={18} className="mr-2" />
-                  Nous contacter
-                </Button>
-              </a>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 h-full">
+          <div className="flex flex-col lg:flex-row gap-12 items-start h-full">
+            
+            {/* Left: Sticky Text */}
+            <div className="lg:sticky lg:top-32 lg:w-1/2 animate-fade-up">
+              <h1 className="font-display text-5xl md:text-7xl text-bone leading-tight mb-6">
+                TRANSFERTS<br />
+                <span className="text-gradient">SIMPLES & RAPIDES</span>
+              </h1>
+              <p className="text-ash text-lg md:text-xl leading-relaxed mb-8 max-w-lg">
+                Simulez vos transferts d'argent entre la France, le Gabon, le Cameroun, le Senegal et le Maroc. Taux en temps reel, frais transparents.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link to="/services">
+                  <Button size="lg">
+                    Nos corridors
+                    <ArrowRight size={18} className="ml-2" />
+                  </Button>
+                </Link>
+                <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer">
+                  <Button variant="secondary" size="lg">
+                    <MessageCircle size={18} className="mr-2" />
+                    Nous contacter
+                  </Button>
+                </a>
+              </div>
             </div>
-          </div>
 
-          {/* Right: Simulator */}
-          <div className="animate-fade-up animate-delay-200">
-            <Simulator />
+            {/* Right: Scrolling Simulator */}
+            <div className="relative z-10 w-full lg:w-1/2 max-w-xl mx-auto lg:mx-0 animate-fade-up animate-delay-200">
+              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-primary/30 to-emerald-light/30 rounded-2xl blur-xl opacity-50"></div>
+              <Simulator />
+            </div>
           </div>
         </div>
       </section>
